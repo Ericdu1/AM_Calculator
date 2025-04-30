@@ -1,0 +1,238 @@
+import { useState } from 'react'
+import axios from 'axios'
+import 'katex/dist/katex.min.css'
+import katex from 'katex'
+import MathKeypad from './MathKeypad'
+import StepByStepSolution from './StepByStepSolution'
+import FormulaLibrary from './FormulaLibrary'
+
+const Calculator = ({ darkMode }) => {
+  const [input, setInput] = useState('')
+  const [result, setResult] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState('calculator')
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value)
+    setError(null)
+  }
+
+  const handleKeypadInput = (symbol) => {
+    setInput((prev) => prev + symbol)
+    setError(null)
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!input.trim()) {
+      setError('请输入数学问题')
+      return
+    }
+    
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    
+    try {
+      const response = await axios.post('/api/solve', { query: input })
+      if (response.data.error) {
+        setError(response.data.error)
+      } else {
+        setResult(response.data)
+      }
+    } catch (err) {
+      console.error(err)
+      setError('计算过程中出错，请检查您的输入并重试。')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClear = () => {
+    setInput('')
+    setResult(null)
+    setError(null)
+  }
+
+  // 使用katex直接渲染LaTeX
+  const renderLatex = (latex) => {
+    if (!latex) return null;
+    try {
+      const html = katex.renderToString(latex, {
+        throwOnError: false,
+        displayMode: true
+      });
+      return <div dangerouslySetInnerHTML={{ __html: html }} />;
+    } catch (error) {
+      console.error("LaTeX渲染错误:", error);
+      return <div className="text-red-500">LaTeX渲染错误: {latex}</div>;
+    }
+  };
+
+  return (
+    <div className={`rounded-xl shadow-2xl overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'} transition-all duration-300`}>
+      <div className="p-0">
+        {/* 顶部导航栏 */}
+        <div className={`px-6 py-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-600'} text-white`}>
+          <h2 className="text-2xl font-bold text-center">数学AI计算器</h2>
+        </div>
+        
+        {/* 标签页切换 */}
+        <div className={`flex border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+          <button
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === 'calculator'
+                ? (darkMode ? 'border-blue-500 text-blue-500' : 'border-blue-500 text-blue-600')
+                : (darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700')
+            } border-b-2 ${activeTab === 'calculator' ? 'border-blue-500' : 'border-transparent'}`}
+            onClick={() => setActiveTab('calculator')}
+          >
+            计算器
+          </button>
+          <button
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === 'formulas'
+                ? (darkMode ? 'border-blue-500 text-blue-500' : 'border-blue-500 text-blue-600')
+                : (darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700')
+            } border-b-2 ${activeTab === 'formulas' ? 'border-blue-500' : 'border-transparent'}`}
+            onClick={() => setActiveTab('formulas')}
+          >
+            公式库
+          </button>
+          <button
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === 'favorites'
+                ? (darkMode ? 'border-blue-500 text-blue-500' : 'border-blue-500 text-blue-600')
+                : (darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700')
+            } border-b-2 ${activeTab === 'favorites' ? 'border-blue-500' : 'border-transparent'}`}
+            onClick={() => setActiveTab('favorites')}
+          >
+            收藏夹
+          </button>
+        </div>
+        
+        {/* 内容区域 */}
+        <div className="p-6">
+          {activeTab === 'calculator' ? (
+            // 计算器内容
+            <>
+              <form onSubmit={handleSubmit} className="mb-6">
+                <div className="mb-4">
+                  <label htmlFor="math-input" className="block mb-2 font-medium text-lg">
+                    输入数学问题
+                  </label>
+                  <div className={`rounded-lg overflow-hidden border-2 ${darkMode ? 'border-gray-600' : 'border-blue-300'} focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200`}>
+                    <textarea
+                      id="math-input"
+                      value={input}
+                      onChange={handleInputChange}
+                      className={`w-full p-4 focus:outline-none font-medium text-lg ${
+                        darkMode 
+                          ? 'bg-gray-700 text-white' 
+                          : 'bg-white text-gray-800'
+                      }`}
+                      placeholder="例如：求 ∫sin(x)dx 或 求解方程 x^2+3x-4=0"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+                
+                <MathKeypad onSymbolClick={handleKeypadInput} darkMode={darkMode} />
+                
+                <div className="flex space-x-4 mt-6">
+                  <button
+                    type="submit"
+                    className={`flex-1 py-3 px-6 rounded-lg text-white font-medium text-lg shadow-lg transition-all duration-200 ${
+                      loading 
+                        ? 'bg-blue-400 cursor-not-allowed' 
+                        : `${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}`
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        计算中...
+                      </span>
+                    ) : '计算'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className={`py-3 px-6 rounded-lg font-medium text-lg shadow-md transition-all duration-200 ${
+                      darkMode 
+                        ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                    } focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50`}
+                  >
+                    清除
+                  </button>
+                </div>
+              </form>
+              
+              {error && (
+                <div className="p-4 mb-6 rounded-lg bg-red-100 border-l-4 border-red-500 text-red-700 dark:bg-red-900/30 dark:text-red-400 dark:border-red-500">
+                  <div className="flex items-center">
+                    <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    {error}
+                  </div>
+                </div>
+              )}
+              
+              {result && !error && (
+                <div className={`mt-8 rounded-xl overflow-hidden transition-all duration-300 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
+                  <div className={`px-6 py-3 ${darkMode ? 'bg-gray-600' : 'bg-blue-100'}`}>
+                    <h3 className="text-xl font-bold">计算结果</h3>
+                  </div>
+                  
+                  <div className="p-6">
+                    {result.latex && (
+                      <div className="mb-6 overflow-x-auto py-4 px-6 rounded-lg bg-opacity-50 bg-white dark:bg-gray-800 dark:bg-opacity-50">
+                        {renderLatex(result.latex)}
+                      </div>
+                    )}
+                    
+                    {result.steps && result.steps.length > 0 && (
+                      <StepByStepSolution steps={result.steps} darkMode={darkMode} />
+                    )}
+                    
+                    {result.explanation && (
+                      <div className="mt-8">
+                        <div className={`px-4 py-2 ${darkMode ? 'bg-gray-600' : 'bg-blue-100'} rounded-t-lg`}>
+                          <h4 className="text-lg font-bold">AI解析</h4>
+                        </div>
+                        <div className={`p-5 rounded-b-lg ${darkMode ? 'bg-gray-600 bg-opacity-50 text-gray-200' : 'bg-white text-gray-700'} border ${darkMode ? 'border-gray-600' : 'border-blue-100'}`}>
+                          {result.explanation}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : activeTab === 'favorites' ? (
+            // 收藏夹内容
+            <FormulaLibrary darkMode={darkMode} showFavoritesOnly={true} />
+          ) : (
+            // 公式库内容
+            <FormulaLibrary darkMode={darkMode} showFavoritesOnly={false} />
+          )}
+        </div>
+        
+        {/* 底部版权信息 */}
+        <div className={`px-6 py-3 text-center text-sm ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
+          © 2024 数学AI计算器 | 基于 Qwen2.5-Math
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Calculator 
