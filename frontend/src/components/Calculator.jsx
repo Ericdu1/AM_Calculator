@@ -5,6 +5,8 @@ import katex from 'katex'
 import MathKeypad from './MathKeypad'
 import StepByStepSolution from './StepByStepSolution'
 import FormulaLibrary from './FormulaLibrary'
+import HistoryPanel from './HistoryPanel'
+import useLocalStorage from '../hooks/useLocalStorage'
 
 const Calculator = ({ darkMode }) => {
   const [input, setInput] = useState('')
@@ -12,6 +14,8 @@ const Calculator = ({ darkMode }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('calculator')
+  // 使用自定义hook存储历史记录
+  const [history, setHistory] = useLocalStorage('mathCalculatorHistory', [])
 
   const handleInputChange = (e) => {
     setInput(e.target.value)
@@ -21,6 +25,40 @@ const Calculator = ({ darkMode }) => {
   const handleKeypadInput = (symbol) => {
     setInput((prev) => prev + symbol)
     setError(null)
+  }
+
+  // 添加到历史记录的函数
+  const addToHistory = (query, result) => {
+    // 创建新的历史记录条目
+    const historyItem = {
+      query,
+      result,
+      timestamp: new Date().toISOString()
+    }
+    
+    // 更新历史记录，最新的记录在前面
+    setHistory(prev => {
+      // 限制历史记录最多20条
+      const newHistory = [historyItem, ...prev]
+      if (newHistory.length > 20) {
+        return newHistory.slice(0, 20)
+      }
+      return newHistory
+    })
+  }
+
+  // 清除所有历史记录
+  const handleClearHistory = () => {
+    setHistory([])
+  }
+
+  // 从历史记录加载一个计算
+  const handleSelectHistoryItem = (item) => {
+    setInput(item.query)
+    setResult(item.result)
+    setError(null)
+    // 切换到计算器选项卡
+    setActiveTab('calculator')
   }
 
   const handleSubmit = async (e) => {
@@ -40,7 +78,10 @@ const Calculator = ({ darkMode }) => {
       if (response.data.error) {
         setError(response.data.error)
       } else {
-        setResult(response.data)
+        const resultData = response.data
+        setResult(resultData)
+        // 添加到历史记录
+        addToHistory(input, resultData)
       }
     } catch (err) {
       console.error(err)
@@ -111,6 +152,16 @@ const Calculator = ({ darkMode }) => {
           >
             收藏夹
           </button>
+          <button
+            className={`px-6 py-3 text-sm font-medium ${
+              activeTab === 'history'
+                ? (darkMode ? 'border-blue-500 text-blue-500' : 'border-blue-500 text-blue-600')
+                : (darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700')
+            } border-b-2 ${activeTab === 'history' ? 'border-blue-500' : 'border-transparent'}`}
+            onClick={() => setActiveTab('history')}
+          >
+            历史记录
+          </button>
         </div>
         
         {/* 内容区域 */}
@@ -118,6 +169,18 @@ const Calculator = ({ darkMode }) => {
           {activeTab === 'calculator' ? (
             // 计算器内容
             <>
+              {/* 如果有历史记录，显示一个折叠的历史面板 */}
+              {history.length > 0 && (
+                <div className="mb-6">
+                  <HistoryPanel 
+                    darkMode={darkMode} 
+                    history={history.slice(0, 3)} 
+                    onSelectHistoryItem={handleSelectHistoryItem}
+                    onClearHistory={() => setActiveTab('history')}
+                  />
+                </div>
+              )}
+            
               <form onSubmit={handleSubmit} className="mb-6">
                 <div className="mb-4">
                   <label htmlFor="math-input" className="block mb-2 font-medium text-lg">
@@ -217,6 +280,16 @@ const Calculator = ({ darkMode }) => {
                 </div>
               )}
             </>
+          ) : activeTab === 'history' ? (
+            // 历史记录内容
+            <div className="mb-6">
+              <HistoryPanel 
+                darkMode={darkMode} 
+                history={history} 
+                onSelectHistoryItem={handleSelectHistoryItem}
+                onClearHistory={handleClearHistory}
+              />
+            </div>
           ) : activeTab === 'favorites' ? (
             // 收藏夹内容
             <FormulaLibrary darkMode={darkMode} showFavoritesOnly={true} />
