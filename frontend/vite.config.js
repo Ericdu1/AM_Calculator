@@ -5,10 +5,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '127.0.0.1',  // 使用IP地址而不是localhost
     port: 5173,  // 固定端口
+    strictPort: true,  // 如果端口被占用，会报错而不是使用另一个端口
+    cors: true,  // 启用CORS
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),

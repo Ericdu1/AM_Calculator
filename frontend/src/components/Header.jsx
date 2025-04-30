@@ -15,7 +15,7 @@ const Header = ({ darkMode, toggleDarkMode }) => {
           {darkMode ? <FaSun className="text-yellow-300" /> : <FaMoon className="text-gray-700" />}
         </button>
         <a 
-          href="https://github.com/yourrepo/math-ai-calculator" 
+          href="https://github.com/Ericdu1/Math_AI_Calculator" 
           target="_blank" 
           rel="noopener noreferrer"
           className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
