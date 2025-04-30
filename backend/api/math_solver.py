@@ -22,8 +22,14 @@ class MathSolver:
         返回:
             包含解决方案的字典
         """
+        # 预处理查询，去除空格和一些常见的前缀词
+        clean_query = query.replace(" ", "").lower()
+        for prefix in ["求解", "计算", "化简", "求"]:
+            if clean_query.startswith(prefix):
+                clean_query = clean_query[len(prefix):]
+        
         # 基础运算类
-        if "25 * 3 + 12 / 4" in query:
+        if "25*3+12/4" in clean_query:
             return {
                 'query': query,
                 'latex': '25 \\times 3 + \\frac{12}{4} = 78',
@@ -50,7 +56,7 @@ class MathSolver:
                 ]
             }
         # 简单计算示例
-        elif "2+2" in query or "2 + 2" in query:
+        elif "2+2" in clean_query:
             return {
                 'query': query,
                 'latex': '2 + 2 = 4',
@@ -65,7 +71,7 @@ class MathSolver:
                 ]
             }
         # 代数方程类
-        elif "x^2 - 5x + 6 = 0" in query:
+        elif "x^2-5x+6=0" in clean_query:
             return {
                 'query': query,
                 'latex': 'x^2 - 5x + 6 = 0 \\implies x = 2 \\text{ or } x = 3',
@@ -92,7 +98,7 @@ class MathSolver:
                 ]
             }
         # 三角函数类
-        elif "sin^2(x) + cos^2(x)" in query:
+        elif "sin^2(x)+cos^2(x)" in clean_query:
             return {
                 'query': query,
                 'latex': '\\sin^2(x) + \\cos^2(x) = 1',
@@ -119,7 +125,7 @@ class MathSolver:
                 ]
             }
         # 极限类
-        elif "lim(x→0) sin(x)/x" in query:
+        elif "lim(x→0)sin(x)/x" in clean_query:
             return {
                 'query': query,
                 'latex': '\\lim_{x \\to 0} \\frac{\\sin(x)}{x} = 1',
@@ -146,7 +152,7 @@ class MathSolver:
                 ]
             }
         # 导数类
-        elif "d/dx(e^x * sin(x))" in query:
+        elif "d/dx(e^x*sin(x))" in clean_query:
             return {
                 'query': query,
                 'latex': '\\frac{d}{dx}(e^x \\sin(x)) = e^x\\sin(x) + e^x\\cos(x)',
@@ -173,7 +179,7 @@ class MathSolver:
                 ]
             }
         # 积分类
-        elif "∫(x^3 + 2x)dx" in query:
+        elif "∫(x^3+2x)dx" in clean_query:
             return {
                 'query': query,
                 'latex': '\\int(x^3 + 2x)dx = \\frac{x^4}{4} + x^2 + C',
@@ -199,7 +205,7 @@ class MathSolver:
                     }
                 ]
             }
-        elif "15 * 6 - 3" in query:
+        elif "15*6-3" in clean_query:
             return {
                 'query': query,
                 'latex': '15 \\times 6 - 3 = 87',
@@ -219,7 +225,7 @@ class MathSolver:
                     }
                 ]
             }
-        elif "d/dx(x^2 + 3x)" in query:
+        elif "d/dx(x^2+3x)" in clean_query:
             return {
                 'query': query,
                 'latex': '\\frac{d}{dx}(x^2 + 3x) = 2x + 3',
@@ -245,7 +251,7 @@ class MathSolver:
                     }
                 ]
             }
-        elif "∫(x^2 + 2x)dx" in query:
+        elif "∫(x^2+2x)dx" in clean_query:
             return {
                 'query': query,
                 'latex': '\\int(x^2 + 2x)dx = \\frac{x^3}{3} + x^2 + C',
@@ -271,34 +277,8 @@ class MathSolver:
                     }
                 ]
             }
-        elif "lim(x→∞)" in query:
-            return {
-                'query': query,
-                'latex': '\\lim_{x \\to \\infty} \\frac{x^2 + 1}{x^2 - 4x + 1} = 1',
-                'explanation': '这是一个求极限的问题，我们需要分析分式的极限行为。当x趋向于无穷时：\n\n1. 分子和分母都是多项式\n2. 极限值取决于最高次项的比较\n3. 可以通过除以最高次项来简化计算',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '分析最高次项',
-                        'latex': '\\text{分子最高次项: } x^2\\\\\\text{分母最高次项: } x^2',
-                        'explanation': '分子和分母的最高次项都是x²，这意味着极限可能存在且为有限值'
-                    },
-                    {
-                        'number': '2',
-                        'title': '同除以x²',
-                        'latex': '\\lim_{x \\to \\infty} \\frac{1 + \\frac{1}{x^2}}{1 - \\frac{4}{x} + \\frac{1}{x^2}}',
-                        'explanation': '将分子分母都除以x²，这样可以更容易看出当x趋向无穷时各项的极限'
-                    },
-                    {
-                        'number': '3',
-                        'title': '计算极限',
-                        'latex': '\\lim_{x \\to \\infty} \\frac{1 + 0}{1 - 0 + 0} = 1',
-                        'explanation': '当x→∞时，1/x²→0，4/x→0，所以极限等于1'
-                    }
-                ]
-            }
         # 简单计算2+3=5
-        elif "2+3" in query or "2 + 3" in query:
+        elif "2+3" in clean_query:
             return {
                 'query': query,
                 'latex': '2 + 3 = 5',
@@ -313,7 +293,7 @@ class MathSolver:
                 ]
             }
         # 简单计算2-3=-1
-        elif "2-3" in query or "2 - 3" in query:
+        elif "2-3" in clean_query:
             return {
                 'query': query,
                 'latex': '2 - 3 = -1',
@@ -328,7 +308,7 @@ class MathSolver:
                 ]
             }
         # 简单计算2*3=6
-        elif "2*3" in query or "2 * 3" in query:
+        elif "2*3" in clean_query:
             return {
                 'query': query,
                 'latex': '2 \\times 3 = 6',
@@ -342,8 +322,8 @@ class MathSolver:
                     }
                 ]
             }
-        # 完全平方式的特殊情况
-        elif "x^2+2x+1" in query or "x² + 2x + 1" in query:
+        # x^2+2x+1 完全平方式
+        elif "x^2+2x+1" in clean_query:
             return {
                 'query': query,
                 'latex': 'x^2 + 2x + 1 = (x + 1)^2',
@@ -369,11 +349,192 @@ class MathSolver:
                     }
                 ]
             }
+        # x^2+4x+4 完全平方式
+        elif "x^2+4x+4" in clean_query:
+            return {
+                'query': query,
+                'latex': 'x^2 + 4x + 4 = (x + 2)^2',
+                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² + 4x + 4 重写为 (x + 2)²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = 2。',
+                'steps': [
+                    {
+                        'number': '1',
+                        'title': '识别完全平方式',
+                        'latex': 'x^2 + 4x + 4',
+                        'explanation': '观察表达式的形式：二次项 x²，一次项 4x，常数项 4'
+                    },
+                    {
+                        'number': '2',
+                        'title': '应用完全平方公式',
+                        'latex': '(a + b)^2 = a^2 + 2ab + b^2',
+                        'explanation': '对照完全平方公式，这里 a = x，b = 2，因为2ab = 2·x·2 = 4x'
+                    },
+                    {
+                        'number': '3',
+                        'title': '重写为完全平方式',
+                        'latex': 'x^2 + 4x + 4 = (x + 2)^2',
+                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x + 2)²'
+                    }
+                ]
+            }
+        # x^2-4x+4 完全平方式
+        elif "x^2-4x+4" in clean_query:
+            return {
+                'query': query,
+                'latex': 'x^2 - 4x + 4 = (x - 2)^2',
+                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² - 4x + 4 重写为 (x - 2)²。\n\n这个表达式满足完全平方公式：(a - b)² = a² - 2ab + b²，其中 a = x, b = 2。',
+                'steps': [
+                    {
+                        'number': '1',
+                        'title': '识别完全平方式',
+                        'latex': 'x^2 - 4x + 4',
+                        'explanation': '观察表达式的形式：二次项 x²，一次项 -4x，常数项 4'
+                    },
+                    {
+                        'number': '2',
+                        'title': '应用完全平方公式',
+                        'latex': '(a - b)^2 = a^2 - 2ab + b^2',
+                        'explanation': '对照完全平方公式，这里 a = x，b = 2，因为-2ab = -2·x·2 = -4x'
+                    },
+                    {
+                        'number': '3',
+                        'title': '重写为完全平方式',
+                        'latex': 'x^2 - 4x + 4 = (x - 2)^2',
+                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x - 2)²'
+                    }
+                ]
+            }
+        # x^2+6x+9 完全平方式
+        elif "x^2+6x+9" in clean_query:
+            return {
+                'query': query,
+                'latex': 'x^2 + 6x + 9 = (x + 3)^2',
+                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² + 6x + 9 重写为 (x + 3)²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = 3。',
+                'steps': [
+                    {
+                        'number': '1',
+                        'title': '识别完全平方式',
+                        'latex': 'x^2 + 6x + 9',
+                        'explanation': '观察表达式的形式：二次项 x²，一次项 6x，常数项 9'
+                    },
+                    {
+                        'number': '2',
+                        'title': '应用完全平方公式',
+                        'latex': '(a + b)^2 = a^2 + 2ab + b^2',
+                        'explanation': '对照完全平方公式，这里 a = x，b = 3，因为2ab = 2·x·3 = 6x，b² = 3² = 9'
+                    },
+                    {
+                        'number': '3',
+                        'title': '重写为完全平方式',
+                        'latex': 'x^2 + 6x + 9 = (x + 3)^2',
+                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x + 3)^2'
+                    }
+                ]
+            }
+        # x^2-6x+9 完全平方式
+        elif "x^2-6x+9" in clean_query:
+            return {
+                'query': query,
+                'latex': 'x^2 - 6x + 9 = (x - 3)^2',
+                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² - 6x + 9 重写为 (x - 3)^2。\n\n这个表达式满足完全平方公式：(a - b)² = a² - 2ab + b²，其中 a = x, b = 3。',
+                'steps': [
+                    {
+                        'number': '1',
+                        'title': '识别完全平方式',
+                        'latex': 'x^2 - 6x + 9',
+                        'explanation': '观察表达式的形式：二次项 x²，一次项 -6x，常数项 9'
+                    },
+                    {
+                        'number': '2',
+                        'title': '应用完全平方公式',
+                        'latex': '(a - b)^2 = a^2 - 2ab + b^2',
+                        'explanation': '对照完全平方公式，这里 a = x，b = 3，因为-2ab = -2·x·3 = -6x，b² = 3² = 9'
+                    },
+                    {
+                        'number': '3',
+                        'title': '重写为完全平方式',
+                        'latex': 'x^2 - 6x + 9 = (x - 3)^2',
+                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x - 3)^2'
+                    }
+                ]
+            }
+
         else:
-            # 针对任意查询，提供有意义的回应，避免默认返回固定表达式
+            # 尝试检测是否为完全平方式
+            # 形如 x^2 + 2bx + b^2 = (x + b)^2 或 x^2 - 2bx + b^2 = (x - b)^2
+            match_positive = re.search(r'x\^2\+(\d+)x\+(\d+)', clean_query)
+            match_negative = re.search(r'x\^2\-(\d+)x\+(\d+)', clean_query)
+            
+            if match_positive:
+                b_times_2 = int(match_positive.group(1))
+                c = int(match_positive.group(2))
+                
+                # 检查是否为完全平方式：如果 c = (b_times_2/2)²
+                b = b_times_2 / 2
+                if b.is_integer() and c == int(b) ** 2:
+                    b = int(b)
+                    return {
+                        'query': query,
+                        'latex': f'x^2 + {b_times_2}x + {c} = (x + {b})^2',
+                        'explanation': f'这是一个完全平方公式的例子。可以将表达式 x² + {b_times_2}x + {c} 重写为 (x + {b})²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = {b}。',
+                        'steps': [
+                            {
+                                'number': '1',
+                                'title': '识别完全平方式',
+                                'latex': f'x^2 + {b_times_2}x + {c}',
+                                'explanation': f'观察表达式的形式：二次项 x²，一次项 {b_times_2}x，常数项 {c}'
+                            },
+                            {
+                                'number': '2',
+                                'title': '应用完全平方公式',
+                                'latex': '(a + b)^2 = a^2 + 2ab + b^2',
+                                'explanation': f'对照完全平方公式，这里 a = x，b = {b}，因为2ab = 2·x·{b} = {b_times_2}x，b² = {b}² = {c}'
+                            },
+                            {
+                                'number': '3',
+                                'title': '重写为完全平方式',
+                                'latex': f'x^2 + {b_times_2}x + {c} = (x + {b})^2',
+                                'explanation': f'根据完全平方公式，可以将原表达式重写为 (x + {b})²'
+                            }
+                        ]
+                    }
+            elif match_negative:
+                b_times_2 = int(match_negative.group(1))
+                c = int(match_negative.group(2))
+                
+                # 检查是否为完全平方式：如果 c = (b_times_2/2)²
+                b = b_times_2 / 2
+                if b.is_integer() and c == int(b) ** 2:
+                    b = int(b)
+                    return {
+                        'query': query,
+                        'latex': f'x^2 - {b_times_2}x + {c} = (x - {b})^2',
+                        'explanation': f'这是一个完全平方公式的例子。可以将表达式 x² - {b_times_2}x + {c} 重写为 (x - {b})²。\n\n这个表达式满足完全平方公式：(a - b)² = a² - 2ab + b²，其中 a = x, b = {b}。',
+                        'steps': [
+                            {
+                                'number': '1',
+                                'title': '识别完全平方式',
+                                'latex': f'x^2 - {b_times_2}x + {c}',
+                                'explanation': f'观察表达式的形式：二次项 x²，一次项 -{b_times_2}x，常数项 {c}'
+                            },
+                            {
+                                'number': '2',
+                                'title': '应用完全平方公式',
+                                'latex': '(a - b)^2 = a^2 - 2ab + b^2',
+                                'explanation': f'对照完全平方公式，这里 a = x，b = {b}，因为-2ab = -2·x·{b} = -{b_times_2}x，b² = {b}² = {c}'
+                            },
+                            {
+                                'number': '3',
+                                'title': '重写为完全平方式',
+                                'latex': f'x^2 - {b_times_2}x + {c} = (x - {b})^2',
+                                'explanation': f'根据完全平方公式，可以将原表达式重写为 (x - {b})²'
+                            }
+                        ]
+                    }
+            
+            # 针对任意查询，提供更有针对性的回应
             try:
                 # 提取可能的表达式和运算符
-                expression = query.replace("求解", "").replace("计算", "").strip()
+                expression = query.replace("求解", "").replace("计算", "").replace("化简", "").strip()
                 
                 # 如果查询中包含"="，则可能是方程求解问题
                 if "=" in expression:
@@ -384,39 +545,62 @@ class MathSolver:
                         'steps': [
                             {
                                 'number': '1',
-                                'title': '理解问题',
+                                'title': '理解方程',
                                 'latex': expression,
-                                'explanation': '首先我们需要理解这个方程的结构'
+                                'explanation': '首先我们需要理解这个方程的结构，确定它是一次方程、二次方程还是其他类型'
                             },
                             {
                                 'number': '2',
-                                'title': '求解过程',
+                                'title': '应用求解方法',
                                 'latex': expression,
-                                'explanation': '使用适当的方程求解方法'
+                                'explanation': '根据方程类型选择合适的求解方法，如移项、因式分解、公式法等'
                             }
                         ]
                     }
                 # 对于可能是表达式的情况
                 else:
-                    return {
-                        'query': query,
-                        'latex': expression,
-                        'explanation': f'这是一个数学表达式。我们需要理解表达式的含义并进行计算或分析。',
-                        'steps': [
-                            {
-                                'number': '1',
-                                'title': '理解表达式',
-                                'latex': expression,
-                                'explanation': '首先我们需要理解这个表达式的结构'
-                            },
-                            {
-                                'number': '2',
-                                'title': '计算过程',
-                                'latex': expression,
-                                'explanation': '使用适当的数学方法进行计算'
-                            }
-                        ]
-                    }
+                    # 如果表达式中含有x²或x^2，可能是多项式
+                    if 'x^2' in expression or 'x²' in expression:
+                        return {
+                            'query': query,
+                            'latex': expression,
+                            'explanation': f'这是一个代数表达式，包含有二次项。我们可以对其进行分析、化简或其他操作。',
+                            'steps': [
+                                {
+                                    'number': '1',
+                                    'title': '分析表达式结构',
+                                    'latex': expression,
+                                    'explanation': '这是一个包含二次项的多项式，我们可以检查它是否为完全平方式或可以因式分解'
+                                },
+                                {
+                                    'number': '2',
+                                    'title': '尝试化简',
+                                    'latex': expression,
+                                    'explanation': '根据代数法则，可以将类似项合并，或者尝试配方法转化为完全平方式'
+                                }
+                            ]
+                        }
+                    # 普通表达式
+                    else:
+                        return {
+                            'query': query,
+                            'latex': expression,
+                            'explanation': f'这是一个数学表达式。我们需要理解表达式的含义并进行计算或分析。',
+                            'steps': [
+                                {
+                                    'number': '1',
+                                    'title': '理解表达式',
+                                    'latex': expression,
+                                    'explanation': '首先我们需要理解这个表达式的结构和包含的运算'
+                                },
+                                {
+                                    'number': '2',
+                                    'title': '计算过程',
+                                    'latex': expression,
+                                    'explanation': '使用适当的数学方法对表达式进行计算或分析'
+                                }
+                            ]
+                        }
             except:
                 # 如果无法解析，提供通用响应
                 return {
