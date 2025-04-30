@@ -169,18 +169,6 @@ const Calculator = ({ darkMode }) => {
           {activeTab === 'calculator' ? (
             // 计算器内容
             <>
-              {/* 如果有历史记录，显示一个折叠的历史面板 */}
-              {history.length > 0 && (
-                <div className="mb-6">
-                  <HistoryPanel 
-                    darkMode={darkMode} 
-                    history={history.slice(0, 3)} 
-                    onSelectHistoryItem={handleSelectHistoryItem}
-                    onClearHistory={() => setActiveTab('history')}
-                  />
-                </div>
-              )}
-            
               <form onSubmit={handleSubmit} className="mb-6">
                 <div className="mb-4">
                   <label htmlFor="math-input" className="block mb-2 font-medium text-lg">
@@ -246,6 +234,18 @@ const Calculator = ({ darkMode }) => {
                     </svg>
                     {error}
                   </div>
+                </div>
+              )}
+              
+              {/* 如果有历史记录，显示一个折叠的历史面板 */}
+              {history.length > 0 && !loading && !error && (
+                <div className="mb-6 mt-6">
+                  <HistoryPanel 
+                    darkMode={darkMode} 
+                    history={history.slice(0, 3)} 
+                    onSelectHistoryItem={handleSelectHistoryItem}
+                    onClearHistory={() => setActiveTab('history')}
+                  />
                 </div>
               )}
               

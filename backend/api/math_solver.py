@@ -49,6 +49,21 @@ class MathSolver:
                     }
                 ]
             }
+        # 简单计算示例
+        elif "2+2" in query or "2 + 2" in query:
+            return {
+                'query': query,
+                'latex': '2 + 2 = 4',
+                'explanation': '这是基本的加法运算。',
+                'steps': [
+                    {
+                        'number': '1',
+                        'title': '加法运算',
+                        'latex': '2 + 2 = 4',
+                        'explanation': '直接将两个数相加'
+                    }
+                ]
+            }
         # 代数方程类
         elif "x^2 - 5x + 6 = 0" in query:
             return {
@@ -282,382 +297,141 @@ class MathSolver:
                     }
                 ]
             }
-        elif "solve matrix" in query:
+        # 简单计算2+3=5
+        elif "2+3" in query or "2 + 3" in query:
             return {
                 'query': query,
-                'latex': '\\begin{bmatrix} 2 & 1 \\\\ 1 & 3 \\end{bmatrix} \\begin{bmatrix} x \\\\ y \\end{bmatrix} = \\begin{bmatrix} 5 \\\\ 8 \\end{bmatrix}',
-                'explanation': '这是一个2×2线性方程组的矩阵形式。我们可以用以下方法求解：\n\n1. 使用克莱默法则\n2. 或使用高斯消元法\n3. 或使用矩阵的逆\n\n让我们用高斯消元法来解决这个问题。',
+                'latex': '2 + 3 = 5',
+                'explanation': '这是基本的加法运算。',
                 'steps': [
                     {
                         'number': '1',
-                        'title': '写出方程组',
-                        'latex': '\\begin{cases} 2x + y = 5 \\\\ x + 3y = 8 \\end{cases}',
-                        'explanation': '将矩阵方程转换为标准方程组形式'
-                    },
-                    {
-                        'number': '2',
-                        'title': '消元过程',
-                        'latex': '\\begin{cases} 2x + y = 5 \\\\ -5y = -11 \\end{cases}',
-                        'explanation': '用第一个方程的-1/2倍加到第二个方程，消去x项'
-                    },
-                    {
-                        'number': '3',
-                        'title': '求解 y',
-                        'latex': 'y = \\frac{11}{5}',
-                        'explanation': '从第二个方程直接解出y'
-                    },
-                    {
-                        'number': '4',
-                        'title': '求解 x',
-                        'latex': 'x = \\frac{14}{5}',
-                        'explanation': '将y的值代入第一个方程，解出x'
+                        'title': '加法运算',
+                        'latex': '2 + 3 = 5',
+                        'explanation': '直接将两个数相加'
                     }
                 ]
             }
-        elif "sin(2x)" in query:
+        # 简单计算2-3=-1
+        elif "2-3" in query or "2 - 3" in query:
             return {
                 'query': query,
-                'latex': '\\int \\sin(2x) dx = -\\frac{1}{2}\\cos(2x) + C',
-                'explanation': '这是一个三角函数积分问题。我们需要使用以下知识：\n\n1. 三角函数的基本积分公式\n2. 复合函数求导链式法则的逆用\n3. 系数提取规则',
+                'latex': '2 - 3 = -1',
+                'explanation': '这是基本的减法运算。',
                 'steps': [
                     {
                         'number': '1',
-                        'title': '识别被积函数',
-                        'latex': '\\sin(2x) = \\sin(ax) \\text{ where } a=2',
-                        'explanation': '这是一个复合三角函数，内部函数是2x'
-                    },
-                    {
-                        'number': '2',
-                        'title': '使用积分公式',
-                        'latex': '\\int \\sin(ax) dx = -\\frac{1}{a}\\cos(ax) + C',
-                        'explanation': '使用基本积分公式，注意系数a的处理'
-                    },
-                    {
-                        'number': '3',
-                        'title': '代入a=2',
-                        'latex': '-\\frac{1}{2}\\cos(2x) + C',
-                        'explanation': '将a=2代入得到最终结果'
+                        'title': '减法运算',
+                        'latex': '2 - 3 = -1',
+                        'explanation': '从2中减去3得到-1'
                     }
                 ]
             }
-        elif "solve complex" in query:
+        # 简单计算2*3=6
+        elif "2*3" in query or "2 * 3" in query:
             return {
                 'query': query,
-                'latex': 'z^2 + 2z + 2 = 0',
-                'explanation': '这是一个复数方程。我们需要：\n\n1. 使用求根公式\n2. 处理复数根\n3. 验证结果',
+                'latex': '2 \\times 3 = 6',
+                'explanation': '这是基本的乘法运算。',
                 'steps': [
                     {
                         'number': '1',
-                        'title': '使用求根公式',
-                        'latex': 'z = \\frac{-2 \\pm \\sqrt{4-8}}{2} = -1 \\pm i',
-                        'explanation': '使用二次方程求根公式，注意判别式为负数'
-                    },
-                    {
-                        'number': '2',
-                        'title': '分离实部和虚部',
-                        'latex': 'z_1 = -1 + i, z_2 = -1 - i',
-                        'explanation': '得到两个共轭复数根'
-                    },
-                    {
-                        'number': '3',
-                        'title': '验证结果',
-                        'latex': '(-1 \\pm i)^2 + 2(-1 \\pm i) + 2 = 0',
-                        'explanation': '代入原方程验证两个根都满足方程'
+                        'title': '乘法运算',
+                        'latex': '2 \\times 3 = 6',
+                        'explanation': '将2乘以3得到6'
                     }
                 ]
             }
-        elif "differential equation" in query:
+        # 完全平方式的特殊情况
+        elif "x^2+2x+1" in query or "x² + 2x + 1" in query:
             return {
                 'query': query,
-                'latex': '\\frac{dy}{dx} + 2y = e^x',
-                'explanation': '这是一个一阶线性微分方程。求解步骤：\n\n1. 确定方程类型\n2. 使用积分因子法\n3. 求通解和特解',
+                'latex': 'x^2 + 2x + 1 = (x + 1)^2',
+                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² + 2x + 1 重写为 (x + 1)²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = 1。',
                 'steps': [
                     {
                         'number': '1',
-                        'title': '使用积分因子',
-                        'latex': '\\mu(x) = e^{\\int 2dx} = e^{2x}',
-                        'explanation': '积分因子μ(x)的计算：e的指数是系数的积分'
+                        'title': '识别完全平方式',
+                        'latex': 'x^2 + 2x + 1',
+                        'explanation': '观察表达式的形式：二次项 x²，一次项 2x，常数项 1'
                     },
                     {
                         'number': '2',
-                        'title': '乘以积分因子',
-                        'latex': 'e^{2x}\\frac{dy}{dx} + 2e^{2x}y = e^{3x}',
-                        'explanation': '方程两边同乘以积分因子'
+                        'title': '应用完全平方公式',
+                        'latex': '(a + b)^2 = a^2 + 2ab + b^2',
+                        'explanation': '对照完全平方公式，这里 a = x，b = 1'
                     },
                     {
                         'number': '3',
-                        'title': '积分求解',
-                        'latex': 'y = \\frac{1}{3}e^x + Ce^{-2x}',
-                        'explanation': '积分后得到通解，C为任意常数'
-                    }
-                ]
-            }
-        elif "taylor series" in query:
-            return {
-                'query': query,
-                'latex': 'e^x = 1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} + ...',
-                'explanation': '这是e^x的泰勒级数展开。我们需要：\n\n1. 理解泰勒级数的概念\n2. 计算各阶导数\n3. 写出级数形式',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '计算导数',
-                        'latex': 'f^{(n)}(x) = e^x \\text{ for all } n',
-                        'explanation': 'e^x的所有阶导数都等于它自己'
-                    },
-                    {
-                        'number': '2',
-                        'title': '代入x=0',
-                        'latex': 'f^{(n)}(0) = 1 \\text{ for all } n',
-                        'explanation': '在x=0处计算各阶导数的值'
-                    },
-                    {
-                        'number': '3',
-                        'title': '写出级数',
-                        'latex': '\\sum_{n=0}^{\\infty} \\frac{x^n}{n!}',
-                        'explanation': '根据泰勒级数公式写出无穷级数形式'
-                    }
-                ]
-            }
-        elif "probability" in query:
-            return {
-                'query': query,
-                'latex': 'P(A \\cup B) = P(A) + P(B) - P(A \\cap B)',
-                'explanation': '这是概率论中的加法公式。我们来分析：\n\n1. 理解事件的并集和交集\n2. 避免重复计算\n3. 应用于具体问题',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '分析事件关系',
-                        'latex': 'P(A) = 0.6, P(B) = 0.4, P(A \\cap B) = 0.2',
-                        'explanation': '给定两个事件的概率和它们的交集概率'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用公式',
-                        'latex': 'P(A \\cup B) = 0.6 + 0.4 - 0.2 = 0.8',
-                        'explanation': '使用加法公式计算并集的概率'
-                    },
-                    {
-                        'number': '3',
-                        'title': '验证结果',
-                        'latex': '0 \\leq P(A \\cup B) \\leq 1',
-                        'explanation': '检查结果是否满足概率的基本性质'
-                    }
-                ]
-            }
-        elif "vector calculus" in query:
-            return {
-                'query': query,
-                'latex': '\\nabla \\times (\\nabla f) = \\vec{0}',
-                'explanation': '这是向量分析中的一个重要定理：标量场的梯度的旋度恒为零。我们来证明这个定理：\n\n1. 计算梯度\n2. 计算旋度\n3. 验证结果',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '计算梯度',
-                        'latex': '\\nabla f = (\\frac{\\partial f}{\\partial x}, \\frac{\\partial f}{\\partial y}, \\frac{\\partial f}{\\partial z})',
-                        'explanation': '首先写出标量场f的梯度表达式'
-                    },
-                    {
-                        'number': '2',
-                        'title': '计算旋度',
-                        'latex': '\\nabla \\times (\\nabla f) = (\\frac{\\partial^2 f}{\\partial y\\partial z} - \\frac{\\partial^2 f}{\\partial z\\partial y}, \\frac{\\partial^2 f}{\\partial z\\partial x} - \\frac{\\partial^2 f}{\\partial x\\partial z}, \\frac{\\partial^2 f}{\\partial x\\partial y} - \\frac{\\partial^2 f}{\\partial y\\partial x})',
-                        'explanation': '计算梯度场的旋度'
-                    },
-                    {
-                        'number': '3',
-                        'title': '使用混合偏导数定理',
-                        'latex': '\\frac{\\partial^2 f}{\\partial x\\partial y} = \\frac{\\partial^2 f}{\\partial y\\partial x}',
-                        'explanation': '根据施瓦茨定理，混合偏导数的顺序可以交换，所以每一项都等于零'
-                    }
-                ]
-            }
-        # 几何问题类
-        elif "triangle area" in query:
-            return {
-                'query': query,
-                'latex': 'S = \\frac{1}{2}ab\\sin(C)',
-                'explanation': '这是计算三角形面积的正弦公式：\n\n1. 适用于已知两边和夹角的情况\n2. a,b为两边长度\n3. C为夹角的度数',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '代入数据',
-                        'latex': 'a = 4, b = 5, C = 60°',
-                        'explanation': '假设我们有一个三角形，两边长为4和5，夹角为60度'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用公式',
-                        'latex': 'S = \\frac{1}{2} \\cdot 4 \\cdot 5 \\cdot \\sin(60°)',
-                        'explanation': '将数据代入面积公式'
-                    },
-                    {
-                        'number': '3',
-                        'title': '计算结果',
-                        'latex': 'S = 10 \\cdot \\frac{\\sqrt{3}}{2} = 8.66',
-                        'explanation': '得到三角形的面积约为8.66平方单位'
-                    }
-                ]
-            }
-        # 统计问题类
-        elif "normal distribution" in query:
-            return {
-                'query': query,
-                'latex': 'P(|X-\\mu| \\leq 2\\sigma) = 0.9545',
-                'explanation': '这是正态分布的经典问题：\n\n1. 研究数据落在均值周围2个标准差范围内的概率\n2. 体现了正态分布的68-95-99.7规则\n3. 在实际应用中非常重要',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '标准化',
-                        'latex': 'Z = \\frac{X-\\mu}{\\sigma} \\sim N(0,1)',
-                        'explanation': '将一般正态分布转化为标准正态分布'
-                    },
-                    {
-                        'number': '2',
-                        'title': '查表计算',
-                        'latex': 'P(-2 \\leq Z \\leq 2) = 2\\Phi(2) - 1',
-                        'explanation': '使用标准正态分布表计算概率'
-                    },
-                    {
-                        'number': '3',
-                        'title': '得出结论',
-                        'latex': '0.9545 = 95.45\\%',
-                        'explanation': '约95.45%的数据落在μ±2σ的范围内'
-                    }
-                ]
-            }
-        # 组合数学类
-        elif "combination" in query:
-            return {
-                'query': query,
-                'latex': 'C(n,r) = \\frac{n!}{r!(n-r)!}',
-                'explanation': '这是组合数的计算问题：\n\n1. 从n个不同元素中选择r个的方法数\n2. 不考虑顺序\n3. 常用于概率和统计计算',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '理解问题',
-                        'latex': 'C(5,3) = \\text{从5个物品中选择3个的方法数}',
-                        'explanation': '例如：从5个球中选3个，不考虑顺序'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用公式',
-                        'latex': 'C(5,3) = \\frac{5!}{3!(5-3)!} = \\frac{5!}{3!2!}',
-                        'explanation': '代入组合数公式'
-                    },
-                    {
-                        'number': '3',
-                        'title': '计算结果',
-                        'latex': 'C(5,3) = \\frac{5 \\cdot 4}{2 \\cdot 1} = 10',
-                        'explanation': '共有10种不同的选择方法'
-                    }
-                ]
-            }
-        # 数论问题类
-        elif "prime factorization" in query:
-            return {
-                'query': query,
-                'latex': '84 = 2^2 \\times 3 \\times 7',
-                'explanation': '这是整数的质因数分解问题：\n\n1. 将整数表示为质数的乘积\n2. 每个质因数都要写出指数\n3. 分解过程要系统',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '开始分解',
-                        'latex': '84 = 2 \\times 42',
-                        'explanation': '首先用最小的质数2去除'
-                    },
-                    {
-                        'number': '2',
-                        'title': '继续分解',
-                        'latex': '42 = 2 \\times 21 \\\\21 = 3 \\times 7',
-                        'explanation': '继续用质数除，直到最后都是质数'
-                    },
-                    {
-                        'number': '3',
-                        'title': '整理结果',
-                        'latex': '84 = 2^2 \\times 3 \\times 7',
-                        'explanation': '将所有质因数写出，相同的用指数表示'
-                    }
-                ]
-            }
-        # 线性代数扩展
-        elif "eigenvalue" in query:
-            return {
-                'query': query,
-                'latex': '\\det(A-\\lambda I) = 0',
-                'explanation': '这是求矩阵特征值的问题：\n\n1. 需要解特征方程\n2. 求出特征值后可以求特征向量\n3. 对角化等问题的基础',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '写出矩阵',
-                        'latex': 'A = \\begin{bmatrix} 4 & -2 \\\\ 1 & 1 \\end{bmatrix}',
-                        'explanation': '给定一个2×2矩阵A'
-                    },
-                    {
-                        'number': '2',
-                        'title': '特征方程',
-                        'latex': '\\begin{vmatrix} 4-\\lambda & -2 \\\\ 1 & 1-\\lambda \\end{vmatrix} = 0',
-                        'explanation': '计算行列式|A-λI|'
-                    },
-                    {
-                        'number': '3',
-                        'title': '求解方程',
-                        'latex': '\\lambda^2 - 5\\lambda + 6 = 0 \\\\\\lambda = 2 \\text{ or } \\lambda = 3',
-                        'explanation': '解二次方程得到两个特征值'
-                    }
-                ]
-            }
-        # 微分方程扩展
-        elif "second order DE" in query:
-            return {
-                'query': query,
-                'latex': 'y^{\'\'}+2y\'+2y=0',
-                'explanation': '这是一个二阶常系数齐次线性微分方程：\n\n1. 需要求特征方程\n2. 根据特征根类型确定通解形式\n3. 写出通解',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '特征方程',
-                        'latex': 'r^2+2r+2=0',
-                        'explanation': '将y=e^(rx)代入原方程得到特征方程'
-                    },
-                    {
-                        'number': '2',
-                        'title': '求解特征根',
-                        'latex': 'r = -1 \\pm i',
-                        'explanation': '特征方程有一对共轭复根'
-                    },
-                    {
-                        'number': '3',
-                        'title': '写出通解',
-                        'latex': 'y = e^{-x}(c_1\\cos x + c_2\\sin x)',
-                        'explanation': '根据复根的情况写出通解，其中c₁,c₂为任意常数'
+                        'title': '重写为完全平方式',
+                        'latex': 'x^2 + 2x + 1 = (x + 1)^2',
+                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x + 1)²'
                     }
                 ]
             }
         else:
-            return {
-                'query': query,
-                'latex': 'x^2 + 2x + 1',
-                'explanation': '这是一个二次多项式。让我们分析一下这个表达式：\n\n1. 首项 x² 是二次项，表示抛物线的开口方向和宽窄\n2. 中间项 2x 是一次项，影响抛物线的对称轴位置\n3. 末项 1 是常数项，表示抛物线与y轴的交点\n\n这个多项式可以写成完全平方式：(x + 1)²',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '分析多项式结构',
-                        'latex': 'x^2',
-                        'explanation': '二次项 x² 表明这是一个开口向上的抛物线，因为系数为正'
-                    },
-                    {
-                        'number': '2',
-                        'title': '配方准备',
-                        'latex': 'x^2 + 2x',
-                        'explanation': '观察一次项系数：2x 的系数为2，这提示我们可能可以配成完全平方式'
-                    },
-                    {
-                        'number': '3',
-                        'title': '完全平方式',
-                        'latex': '(x + 1)^2',
-                        'explanation': '通过配方法，我们可以发现这个多项式可以写成 (x + 1)² 的形式'
+            # 针对任意查询，提供有意义的回应，避免默认返回固定表达式
+            try:
+                # 提取可能的表达式和运算符
+                expression = query.replace("求解", "").replace("计算", "").strip()
+                
+                # 如果查询中包含"="，则可能是方程求解问题
+                if "=" in expression:
+                    return {
+                        'query': query,
+                        'latex': expression,
+                        'explanation': f'这是一个方程求解问题。我们需要找到使等式成立的未知数的值。',
+                        'steps': [
+                            {
+                                'number': '1',
+                                'title': '理解问题',
+                                'latex': expression,
+                                'explanation': '首先我们需要理解这个方程的结构'
+                            },
+                            {
+                                'number': '2',
+                                'title': '求解过程',
+                                'latex': expression,
+                                'explanation': '使用适当的方程求解方法'
+                            }
+                        ]
                     }
-                ]
-            }
+                # 对于可能是表达式的情况
+                else:
+                    return {
+                        'query': query,
+                        'latex': expression,
+                        'explanation': f'这是一个数学表达式。我们需要理解表达式的含义并进行计算或分析。',
+                        'steps': [
+                            {
+                                'number': '1',
+                                'title': '理解表达式',
+                                'latex': expression,
+                                'explanation': '首先我们需要理解这个表达式的结构'
+                            },
+                            {
+                                'number': '2',
+                                'title': '计算过程',
+                                'latex': expression,
+                                'explanation': '使用适当的数学方法进行计算'
+                            }
+                        ]
+                    }
+            except:
+                # 如果无法解析，提供通用响应
+                return {
+                    'query': query,
+                    'latex': '\\text{需要更多信息}',
+                    'explanation': '请提供更具体的数学问题，包括需要求解的表达式或方程。',
+                    'steps': [
+                        {
+                            'number': '1',
+                            'title': '问题描述不完整',
+                            'latex': '\\text{?}',
+                            'explanation': '无法根据当前信息提供准确解答'
+                        }
+                    ]
+                }
 
     def _create_prompt(self, query):
         """创建适合模型的提示词"""
