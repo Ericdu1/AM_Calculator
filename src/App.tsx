@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -29,10 +29,29 @@ import {
   Help as HelpIcon,
   Calculate as CalculateIcon,
   LibraryBooks as LibraryIcon,
+  Star as StarIcon
 } from '@mui/icons-material';
 import MathInput from './components/MathInput';
 import HelpDialog from './components/HelpDialog';
 import FormulaLibrary from './components/FormulaLibrary';
+import History from './components/History';
+import Favorites from './components/Favorites';
+
+interface HistoryItem {
+  expression: string;
+  result: string;
+  timestamp: Date;
+  isFavorite: boolean;
+}
+
+interface FavoriteItem {
+  id: string;
+  type: 'expression' | 'formula';
+  content: string;
+  description: string;
+  category?: string;
+  timestamp: Date;
+}
 
 function App() {
   const [result, setResult] = useState<string>('');
@@ -40,9 +59,9 @@ function App() {
   const [explanation, setExplanation] = useState<string>('');
   const [helpOpen, setHelpOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [history, setHistory] = useState<string[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [selectedTool, setSelectedTool] = useState('calculator');
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [activeTab, setActiveTab] = useState<'calculator' | 'formulas' | 'history' | 'favorites'>('calculator');
 
   const theme = createTheme({
     palette: {
@@ -76,23 +95,73 @@ function App() {
       setResult(mockResult.result);
       setSteps(mockResult.steps);
       setExplanation(mockResult.explanation);
-      setHistory(prev => [value, ...prev]);
+
+      // 添加到历史记录
+      const historyItem: HistoryItem = {
+        expression: value,
+        result: mockResult.result,
+        timestamp: new Date(),
+        isFavorite: false
+      };
+      setHistory(prev => [historyItem, ...prev]);
     } catch (error) {
       console.error('处理失败:', error);
       setResult('处理失败，请重试');
     }
   };
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
+  const handleClearHistory = () => {
+    setHistory([]);
   };
 
-  const toggleFavorite = (expression: string) => {
-    if (favorites.includes(expression)) {
-      setFavorites(favorites.filter(f => f !== expression));
-    } else {
-      setFavorites([expression, ...favorites]);
-    }
+  const handleDeleteHistoryItem = (index: number) => {
+    setHistory(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRestoreHistoryItem = (expression: string) => {
+    handleMathInputSubmit(expression);
+  };
+
+  const handleToggleHistoryFavorite = (index: number) => {
+    setHistory(prev => {
+      const newHistory = [...prev];
+      const item = newHistory[index];
+      
+      if (item.isFavorite) {
+        // 从收藏夹中移除
+        setFavorites(prev => prev.filter(f => f.content !== item.expression));
+      } else {
+        // 添加到收藏夹
+        const favoriteItem: FavoriteItem = {
+          id: Date.now().toString(),
+          type: 'expression',
+          content: item.expression,
+          description: item.result,
+          timestamp: new Date()
+        };
+        setFavorites(prev => [favoriteItem, ...prev]);
+      }
+      
+      newHistory[index] = { ...item, isFavorite: !item.isFavorite };
+      return newHistory;
+    });
+  };
+
+  const handleRemoveFavorite = (id: string) => {
+    setFavorites(prev => prev.filter(f => f.id !== id));
+    // 同步更新历史记录中的收藏状态
+    setHistory(prev => prev.map(item => {
+      const matchingFavorite = favorites.find(f => f.content === item.expression && f.id === id);
+      return matchingFavorite ? { ...item, isFavorite: false } : item;
+    }));
+  };
+
+  const handleRestoreFavorite = (content: string) => {
+    handleMathInputSubmit(content);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
   };
 
   const quickGuide = [
@@ -146,27 +215,44 @@ function App() {
           }}
         >
           <List>
-            <ListItem button selected={selectedTool === 'calculator'} onClick={() => setSelectedTool('calculator')}>
+            <ListItem
+              button
+              selected={activeTab === 'calculator'}
+              onClick={() => setActiveTab('calculator')}
+            >
               <ListItemIcon>
                 <CalculateIcon />
               </ListItemIcon>
               <ListItemText primary="计算器" />
             </ListItem>
-            <ListItem button selected={selectedTool === 'library'} onClick={() => setSelectedTool('library')}>
+            <ListItem
+              button
+              selected={activeTab === 'formulas'}
+              onClick={() => setActiveTab('formulas')}
+            >
               <ListItemIcon>
-                <LibraryIcon />
+                <FunctionsIcon />
               </ListItemIcon>
               <ListItemText primary="公式库" />
             </ListItem>
-            <ListItem button selected={selectedTool === 'history'} onClick={() => setSelectedTool('history')}>
+            <Divider />
+            <ListItem
+              button
+              selected={activeTab === 'history'}
+              onClick={() => setActiveTab('history')}
+            >
               <ListItemIcon>
                 <HistoryIcon />
               </ListItemIcon>
               <ListItemText primary="历史记录" />
             </ListItem>
-            <ListItem button selected={selectedTool === 'favorites'} onClick={() => setSelectedTool('favorites')}>
+            <ListItem
+              button
+              selected={activeTab === 'favorites'}
+              onClick={() => setActiveTab('favorites')}
+            >
               <ListItemIcon>
-                <BookmarkIcon />
+                <StarIcon />
               </ListItemIcon>
               <ListItemText primary="收藏夹" />
             </ListItem>
@@ -184,85 +270,109 @@ function App() {
             backgroundColor: theme.palette.background.default,
           }}
         >
-          <Grid container spacing={3}>
-            {/* 使用指南卡片 */}
-            <Grid item xs={12}>
-              <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  使用指南
-                </Typography>
-                <Grid container spacing={2}>
-                  {quickGuide.map((guide, index) => (
-                    <Grid item xs={12} sm={6} md={3} key={index}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="subtitle1" color="primary" gutterBottom>
-                            {guide.title}
-                          </Typography>
-                          <Typography variant="body2">
-                            {guide.content}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Paper>
-            </Grid>
-
-            {/* 计算器输入区域 */}
-            <Grid item xs={12}>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  智能数学输入
-                </Typography>
-                <MathInput onSubmit={handleMathInputSubmit} />
-              </Paper>
-            </Grid>
-
-            {/* 结果展示区域 */}
-            {result && (
+          {activeTab === 'calculator' && (
+            <Grid container spacing={3}>
+              {/* 使用指南卡片 */}
               <Grid item xs={12}>
-                <Paper elevation={3} sx={{ p: 3 }}>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    计算结果
+                <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    使用指南
                   </Typography>
-                  <Typography variant="body1" gutterBottom>
-                    {result}
-                  </Typography>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  <Typography variant="h6" gutterBottom color="primary">
-                    解题步骤
-                  </Typography>
-                  <List>
-                    {steps.map((step, index) => (
-                      <ListItem key={index}>
-                        <ListItemText 
-                          primary={step}
-                          sx={{
-                            '& .MuiTypography-root': {
-                              fontFamily: 'math',
-                            },
-                          }}
-                        />
-                      </ListItem>
+                  <Grid container spacing={2}>
+                    {quickGuide.map((guide, index) => (
+                      <Grid item xs={12} sm={6} md={3} key={index}>
+                        <Card variant="outlined">
+                          <CardContent>
+                            <Typography variant="subtitle1" color="primary" gutterBottom>
+                              {guide.title}
+                            </Typography>
+                            <Typography variant="body2">
+                              {guide.content}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
                     ))}
-                  </List>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  <Typography variant="h6" gutterBottom color="primary">
-                    详细解析
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontFamily: 'math' }}>
-                    {explanation}
-                  </Typography>
+                  </Grid>
                 </Paper>
               </Grid>
-            )}
-          </Grid>
+
+              {/* 计算器输入区域 */}
+              <Grid item xs={12}>
+                <Paper elevation={3} sx={{ p: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    智能数学输入
+                  </Typography>
+                  <MathInput onSubmit={handleMathInputSubmit} />
+                </Paper>
+              </Grid>
+
+              {/* 结果展示区域 */}
+              {result && (
+                <Grid item xs={12}>
+                  <Paper elevation={3} sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom color="primary">
+                      计算结果
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                      {result}
+                    </Typography>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Typography variant="h6" gutterBottom color="primary">
+                      解题步骤
+                    </Typography>
+                    <List>
+                      {steps.map((step, index) => (
+                        <ListItem key={index}>
+                          <ListItemText 
+                            primary={step}
+                            sx={{
+                              '& .MuiTypography-root': {
+                                fontFamily: 'math',
+                              },
+                            }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Typography variant="h6" gutterBottom color="primary">
+                      详细解析
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontFamily: 'math' }}>
+                      {explanation}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              )}
+            </Grid>
+          )}
+
+          {activeTab === 'formulas' && (
+            <FormulaLibrary />
+          )}
+
+          {activeTab === 'history' && (
+            <History
+              history={history}
+              onClearHistory={handleClearHistory}
+              onDeleteItem={handleDeleteHistoryItem}
+              onRestoreItem={handleRestoreHistoryItem}
+              onToggleFavorite={handleToggleHistoryFavorite}
+            />
+          )}
+
+          {activeTab === 'favorites' && (
+            <Favorites
+              favorites={favorites}
+              onRemoveFavorite={handleRemoveFavorite}
+              onRestoreItem={handleRestoreFavorite}
+            />
+          )}
         </Box>
 
         <HelpDialog 

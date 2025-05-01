@@ -1,29 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
+  Paper,
   Typography,
   List,
   ListItem,
   ListItemText,
-  ListItemIcon,
   IconButton,
-  Paper,
+  TextField,
   Divider,
-  Collapse
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Chip
 } from '@mui/material';
-import {
-  Functions as FunctionsIcon,
-  Bookmark as BookmarkIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
-} from '@mui/icons-material';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SearchIcon from '@mui/icons-material/Search';
+import { InputAdornment } from '@mui/material';
 
 interface Formula {
   id: string;
-  name: string;
-  expression: string;
-  category: string;
+  title: string;
+  latex: string;
   description: string;
+  example: string;
+  category: string;
+  isFavorite: boolean;
 }
 
 interface FormulaCategory {
@@ -31,23 +35,37 @@ interface FormulaCategory {
   formulas: Formula[];
 }
 
+// 公式数据
 const formulaData: FormulaCategory[] = [
   {
     name: '代数',
     formulas: [
       {
-        id: 'quad',
-        name: '二次方程',
-        expression: 'ax² + bx + c = 0',
+        id: 'alg1',
+        title: '二次方程',
+        latex: 'ax^2 + bx + c = 0',
+        description: '标准二次方程形式，求解公式：x = (-b ± √(b² - 4ac)) / (2a)',
+        example: '例：x² + 5x + 6 = 0',
         category: '代数',
-        description: '求解二次方程的标准形式'
+        isFavorite: false
       },
       {
-        id: 'linear',
-        name: '一次函数',
-        expression: 'y = kx + b',
+        id: 'alg2',
+        title: '完全平方公式',
+        latex: '(a ± b)² = a² ± 2ab + b²',
+        description: '两个数之和或差的平方展开式',
+        example: '例：(x+3)² = x² + 6x + 9',
         category: '代数',
-        description: '一次函数的斜截式'
+        isFavorite: false
+      },
+      {
+        id: 'alg3',
+        title: '立方公式',
+        latex: 'a³ ± b³ = (a ± b)(a² ∓ ab + b²)',
+        description: '两个数之和或差的立方展开式',
+        example: '例：x³ - 8 = (x-2)(x² + 2x + 4)',
+        category: '代数',
+        isFavorite: false
       }
     ]
   },
@@ -55,18 +73,31 @@ const formulaData: FormulaCategory[] = [
     name: '几何',
     formulas: [
       {
-        id: 'circle',
-        name: '圆的标准方程',
-        expression: '(x - a)² + (y - b)² = r²',
+        id: 'geo1',
+        title: '圆的面积',
+        latex: 'A = πr²',
+        description: '圆的面积公式，r为半径',
+        example: '例：半径为3的圆面积为9π',
         category: '几何',
-        description: '圆的标准方程形式'
+        isFavorite: false
       },
       {
-        id: 'ellipse',
-        name: '椭圆标准方程',
-        expression: 'x²/a² + y²/b² = 1',
+        id: 'geo2',
+        title: '三角形面积',
+        latex: 'A = \\frac{1}{2}bh = \\frac{1}{2}ab\\sin C',
+        description: '三角形的面积公式，b为底边，h为高，C为夹角',
+        example: '例：底10，高6的三角形面积为30',
         category: '几何',
-        description: '椭圆的标准方程形式'
+        isFavorite: false
+      },
+      {
+        id: 'geo3',
+        title: '球的体积',
+        latex: 'V = \\frac{4}{3}πr³',
+        description: '球体积公式，r为半径',
+        example: '例：半径为2的球体积为32π/3',
+        category: '几何',
+        isFavorite: false
       }
     ]
   },
@@ -74,74 +105,165 @@ const formulaData: FormulaCategory[] = [
     name: '微积分',
     formulas: [
       {
-        id: 'derivative',
-        name: '导数定义',
-        expression: 'f\'(x) = lim(h→0) [f(x+h) - f(x)]/h',
+        id: 'cal1',
+        title: '导数基本公式',
+        latex: '\\frac{d}{dx}x^n = nx^{n-1}',
+        description: '幂函数求导公式',
+        example: '例：d/dx(x³) = 3x²',
         category: '微积分',
-        description: '函数导数的定义'
+        isFavorite: false
       },
       {
-        id: 'integral',
-        name: '定积分',
-        expression: '∫[a,b] f(x)dx',
+        id: 'cal2',
+        title: '定积分',
+        latex: '\\int_a^b f(x)dx = F(b) - F(a)',
+        description: '定积分的基本定理',
+        example: '例：∫₀¹x²dx = [x³/3]₀¹ = 1/3',
         category: '微积分',
-        description: '定积分的表示形式'
+        isFavorite: false
+      },
+      {
+        id: 'cal3',
+        title: '链式法则',
+        latex: '\\frac{d}{dx}f(g(x)) = f\'(g(x))g\'(x)',
+        description: '复合函数求导法则',
+        example: '例：d/dx(sin(x²)) = 2x·cos(x²)',
+        category: '微积分',
+        isFavorite: false
+      }
+    ]
+  },
+  {
+    name: '三角函数',
+    formulas: [
+      {
+        id: 'tri1',
+        title: '正弦定理',
+        latex: '\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C} = 2R',
+        description: '三角形中边与对应角的正弦比值相等',
+        example: '例：在△ABC中，a/sin A = b/sin B',
+        category: '三角函数',
+        isFavorite: false
+      },
+      {
+        id: 'tri2',
+        title: '余弦定理',
+        latex: 'c² = a² + b² - 2ab\\cos C',
+        description: '三角形中任意边的平方等于其他两边平方和减去它们与夹角余弦的积的两倍',
+        example: '例：已知两边及夹角可求第三边',
+        category: '三角函数',
+        isFavorite: false
       }
     ]
   }
 ];
 
 const FormulaLibrary: React.FC = () => {
-  const [expandedCategory, setExpandedCategory] = React.useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [formulas, setFormulas] = useState(formulaData);
+  const [expandedCategory, setExpandedCategory] = useState<string | false>(false);
 
-  const handleCategoryClick = (categoryName: string) => {
-    setExpandedCategory(expandedCategory === categoryName ? null : categoryName);
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
   };
 
+  const toggleFavorite = (categoryIndex: number, formulaIndex: number) => {
+    const newFormulas = [...formulas];
+    newFormulas[categoryIndex].formulas[formulaIndex].isFavorite = 
+      !newFormulas[categoryIndex].formulas[formulaIndex].isFavorite;
+    setFormulas(newFormulas);
+  };
+
+  const handleCategoryExpand = (category: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpandedCategory(isExpanded ? category : false);
+  };
+
+  const filteredFormulas = formulas.map(category => ({
+    ...category,
+    formulas: category.formulas.filter(formula =>
+      formula.title.toLowerCase().includes(searchTerm) ||
+      formula.description.toLowerCase().includes(searchTerm) ||
+      formula.category.toLowerCase().includes(searchTerm)
+    )
+  })).filter(category => category.formulas.length > 0);
+
   return (
-    <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        数学公式库
-      </Typography>
-
-      {formulaData.map((category) => (
-        <Paper key={category.name} sx={{ mb: 2 }}>
-          <ListItem button onClick={() => handleCategoryClick(category.name)}>
-            <ListItemIcon>
-              <FunctionsIcon />
-            </ListItemIcon>
-            <ListItemText primary={category.name} />
-            {expandedCategory === category.name ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </ListItem>
-
-          <Collapse in={expandedCategory === category.name}>
-            <List component="div" disablePadding>
-              {category.formulas.map((formula) => (
-                <Box key={formula.id}>
-                  <ListItem sx={{ pl: 4 }}>
-                    <ListItemText
-                      primary={formula.name}
-                      secondary={
-                        <>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            {formula.expression}
-                          </Typography>
-                          <br />
-                          {formula.description}
-                        </>
+    <Box sx={{ width: '100%', height: '100%', overflow: 'auto' }}>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="搜索公式..."
+          value={searchTerm}
+          onChange={handleSearch}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ mb: 2 }}
+        />
+        
+        {filteredFormulas.map((category, categoryIndex) => (
+          <Accordion
+            key={category.name}
+            expanded={expandedCategory === category.name}
+            onChange={handleCategoryExpand(category.name)}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6">{category.name}</Typography>
+              <Chip 
+                label={category.formulas.length} 
+                size="small" 
+                sx={{ ml: 1 }} 
+              />
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                {category.formulas.map((formula, formulaIndex) => (
+                  <React.Fragment key={formula.id}>
+                    <ListItem
+                      secondaryAction={
+                        <IconButton 
+                          edge="end" 
+                          onClick={() => toggleFavorite(categoryIndex, formulaIndex)}
+                        >
+                          {formula.isFavorite ? <StarIcon color="primary" /> : <StarBorderIcon />}
+                        </IconButton>
                       }
-                    />
-                    <IconButton edge="end" aria-label="bookmark">
-                      <BookmarkIcon />
-                    </IconButton>
-                  </ListItem>
-                  <Divider variant="inset" component="li" />
-                </Box>
-              ))}
-            </List>
-          </Collapse>
-        </Paper>
-      ))}
+                    >
+                      <ListItemText
+                        primary={
+                          <Typography variant="subtitle1" color="primary">
+                            {formula.title}
+                          </Typography>
+                        }
+                        secondary={
+                          <>
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                              {formula.latex}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              {formula.description}
+                            </Typography>
+                            <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
+                              {formula.example}
+                            </Typography>
+                          </>
+                        }
+                      />
+                    </ListItem>
+                    <Divider />
+                  </React.Fragment>
+                ))}
+              </List>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      </Paper>
     </Box>
   );
 };
