@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import 'katex/dist/katex.min.css'
 import katex from 'katex'
@@ -7,15 +7,37 @@ import StepByStepSolution from './StepByStepSolution'
 import FormulaLibrary from './FormulaLibrary'
 import HistoryPanel from './HistoryPanel'
 import useLocalStorage from '../hooks/useLocalStorage'
+import LoadingScreen from './LoadingScreen'
 
 const Calculator = ({ darkMode }) => {
   const [input, setInput] = useState('')
   const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('calculator')
+  const [isModelReady, setIsModelReady] = useState(false)
   // 使用自定义hook存储历史记录
   const [history, setHistory] = useLocalStorage('mathCalculatorHistory', [])
+
+  // 检查 AI 模型状态
+  useEffect(() => {
+    checkModelStatus()
+  }, [])
+
+  const checkModelStatus = async () => {
+    try {
+      const response = await axios.get('/api/health')
+      if (response.data.status === 'ready') {
+        setIsModelReady(true)
+        setLoading(false)
+      } else {
+        setTimeout(checkModelStatus, 2000) // 每2秒检查一次
+      }
+    } catch (err) {
+      setError('AI 模型加载失败，请刷新页面重试')
+      setLoading(false)
+    }
+  }
 
   const handleInputChange = (e) => {
     setInput(e.target.value)
@@ -182,6 +204,10 @@ const Calculator = ({ darkMode }) => {
       </div>
     );
   };
+
+  if (!isModelReady) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className={`rounded-xl shadow-2xl overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'} transition-all duration-300`}>

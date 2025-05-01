@@ -8,6 +8,10 @@ class MathSolver:
     def __init__(self):
         print("Initializing Qwen2.5-Math AI Calculator")
         self.result_cache = {}
+        self._initialized = False
+        self._init_model()
+
+    def _init_model(self):
         try:
             from transformers import AutoModelForCausalLM, AutoTokenizer
             model_name = "Qwen/Qwen2.5-Math-7B"
@@ -15,13 +19,21 @@ class MathSolver:
             self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map={"": "cpu"}, trust_remote_code=True)
             self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
             print("Model loaded successfully")
+            self._initialized = True
         except Exception as e:
             print(f"Model loading failed: {str(e)}")
             self.model = None
             self.tokenizer = None
+            self._initialized = False
+
+    def is_ready(self):
+        return self._initialized
 
     def solve(self, query):
         """主入口：仅用Qwen2.5-Math大模型推理"""
+        if not self._initialized:
+            raise Exception("AI模型尚未准备就绪，请稍后再试")
+        
         query = self._normalize_query(query)
         if not self.model or not self.tokenizer:
             return self._create_error_response(query, "AI模型未加载")
@@ -39,7 +51,7 @@ class MathSolver:
             return result
         except Exception as e:
             print(f"AI推理异常: {str(e)}")
-            return self._create_error_response(query, str(e))
+            raise Exception(f"计算错误: {str(e)}")
 
     def _normalize_query(self, query):
         query = ' '.join(query.split())

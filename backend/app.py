@@ -18,6 +18,18 @@ print("初始化数学解决器...")
 math_solver = MathSolver()
 print("数学解决器初始化成功")
 
+model_ready = False
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    global model_ready
+    if not model_ready:
+        # 检查模型是否已初始化
+        model_ready = math_solver.is_ready()
+    return jsonify({
+        'status': 'ready' if model_ready else 'initializing'
+    })
+
 @app.route('/api/solve', methods=['POST'])
 def solve():
     """处理数学问题求解请求"""
@@ -30,11 +42,6 @@ def solve():
     except Exception as e:
         print(f"求解错误: {str(e)}", file=sys.stderr)
         return jsonify({'error': f'求解失败: {str(e)}'}), 500
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """简单的健康检查端点"""
-    return jsonify({"status": "ok", "timestamp": time.time()})
 
 # 兼容 flask run 和 python app.py 两种启动方式
 if __name__ == '__main__':
