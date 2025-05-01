@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import 'katex/dist/katex.min.css'
 import katex from 'katex'
@@ -8,40 +8,91 @@ import FormulaLibrary from './FormulaLibrary'
 import HistoryPanel from './HistoryPanel'
 import useLocalStorage from '../hooks/useLocalStorage'
 import LoadingScreen from './LoadingScreen'
+import { solveMathProblem, checkCalculatorStatus } from '../utils/api'
 
 const Calculator = ({ darkMode }) => {
   const [input, setInput] = useState('')
   const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('calculator')
-  const [isModelReady, setIsModelReady] = useState(false)
-  // 使用自定义hook存储历史记录
+  const [isReady, setIsReady] = useState(false)
   const [history, setHistory] = useLocalStorage('mathCalculatorHistory', [])
+  const [keywords, setKeywords] = useState([])
+  const [formulaSuggestions, setFormulaSuggestions] = useState([])
+  const [inputSuggestions, setInputSuggestions] = useState([])
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
+  const inputRef = useRef(null)
 
-  // 检查 AI 模型状态
+  // 检查计算器状态
   useEffect(() => {
-    checkModelStatus()
+    const checkStatus = async () => {
+      try {
+        const ready = await checkCalculatorStatus()
+        setIsReady(ready)
+      } catch (err) {
+        console.error('检查计算器状态失败:', err)
+        setIsReady(false)
+      }
+    }
+    checkStatus()
   }, [])
 
-  const checkModelStatus = async () => {
-    try {
-      const response = await axios.get('/api/health')
-      if (response.data.status === 'ready') {
-        setIsModelReady(true)
-        setLoading(false)
-      } else {
-        setTimeout(checkModelStatus, 2000) // 每2秒检查一次
+  // 处理输入建议
+  useEffect(() => {
+    const getInputSuggestions = async () => {
+      try {
+        const response = await axios.post('/api/suggestions', { prefix: input })
+        setInputSuggestions(response.data.suggestions || [])
+      } catch (err) {
+        console.error('获取输入建议失败:', err)
+        setInputSuggestions([])
       }
-    } catch (err) {
-      setError('AI 模型加载失败，请刷新页面重试')
-      setLoading(false)
+    }
+
+    if (input.length > 0) {
+      getInputSuggestions()
+    } else {
+      setInputSuggestions([])
+    }
+  }, [input])
+
+  const handleInputChange = (e) => {
+    const value = e.target.value
+    setInput(value)
+    setError(null)
+    setSelectedSuggestionIndex(-1)
+  }
+
+  const handleKeyDown = (e) => {
+    if (inputSuggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedSuggestionIndex(prev => 
+          prev < inputSuggestions.length - 1 ? prev + 1 : 0
+        )
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedSuggestionIndex(prev => 
+          prev > 0 ? prev - 1 : inputSuggestions.length - 1
+        )
+      } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+        e.preventDefault()
+        handleSuggestionClick(inputSuggestions[selectedSuggestionIndex])
+      } else if (e.key === 'Escape') {
+        setInputSuggestions([])
+        setSelectedSuggestionIndex(-1)
+      }
     }
   }
 
-  const handleInputChange = (e) => {
-    setInput(e.target.value)
-    setError(null)
+  const handleSuggestionClick = (suggestion) => {
+    setInput(suggestion)
+    setInputSuggestions([])
+    setSelectedSuggestionIndex(-1)
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
   }
 
   const handleKeypadInput = (symbol) => {
@@ -49,18 +100,14 @@ const Calculator = ({ darkMode }) => {
     setError(null)
   }
 
-  // 添加到历史记录的函数
   const addToHistory = (query, result) => {
-    // 创建新的历史记录条目
     const historyItem = {
       query,
       result,
       timestamp: new Date().toISOString()
     }
     
-    // 更新历史记录，最新的记录在前面
     setHistory(prev => {
-      // 限制历史记录最多20条
       const newHistory = [historyItem, ...prev]
       if (newHistory.length > 20) {
         return newHistory.slice(0, 20)
@@ -69,17 +116,14 @@ const Calculator = ({ darkMode }) => {
     })
   }
 
-  // 清除所有历史记录
   const handleClearHistory = () => {
     setHistory([])
   }
 
-  // 从历史记录加载一个计算
   const handleSelectHistoryItem = (item) => {
     setInput(item.query)
     setResult(item.result)
     setError(null)
-    // 切换到计算器选项卡
     setActiveTab('calculator')
   }
 
@@ -94,16 +138,18 @@ const Calculator = ({ darkMode }) => {
     setLoading(true)
     setError(null)
     setResult(null)
+    setKeywords([])
+    setFormulaSuggestions([])
     
     try {
-      const response = await axios.post('/api/solve', { query: input })
-      if (response.data.error) {
-        setError(response.data.error)
+      const response = await solveMathProblem(input)
+      if (response.error) {
+        setError(response.error)
       } else {
-        const resultData = response.data
-        setResult(resultData)
-        // 添加到历史记录
-        addToHistory(input, resultData)
+        setResult(response)
+        setKeywords(response.keywords || [])
+        setFormulaSuggestions(response.formula_suggestions || [])
+        addToHistory(input, response)
       }
     } catch (err) {
       console.error(err)
@@ -126,9 +172,9 @@ const Calculator = ({ darkMode }) => {
       const html = katex.renderToString(latex, {
         throwOnError: false,
         displayMode: true,
-        fleqn: true, // 启用左对齐
-        maxSize: 1.5, // 最大缩放比例
-        minRuleThickness: 0.06, // 最小线宽
+        fleqn: true,
+        maxSize: 1.5,
+        minRuleThickness: 0.06,
         macros: {
           "\\RR": "\\mathbb{R}",
           "\\NN": "\\mathbb{N}",
@@ -205,19 +251,17 @@ const Calculator = ({ darkMode }) => {
     );
   };
 
-  if (!isModelReady) {
-    return <LoadingScreen />;
+  if (!isReady) {
+    return <LoadingScreen message="正在初始化计算器..." />;
   }
 
   return (
     <div className={`rounded-xl shadow-2xl overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'} transition-all duration-300`}>
       <div className="p-0">
-        {/* 顶部导航栏 */}
         <div className={`px-6 py-4 ${darkMode ? 'bg-gray-700' : 'bg-blue-600'} text-white`}>
-          <h2 className="text-2xl font-bold text-center">数学AI计算器</h2>
+          <h2 className="text-2xl font-bold text-center">数学计算器</h2>
         </div>
         
-        {/* 标签页切换 */}
         <div className={`flex border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
           <button
             className={`px-6 py-3 text-sm font-medium ${
@@ -241,16 +285,6 @@ const Calculator = ({ darkMode }) => {
           </button>
           <button
             className={`px-6 py-3 text-sm font-medium ${
-              activeTab === 'favorites'
-                ? (darkMode ? 'border-blue-500 text-blue-500' : 'border-blue-500 text-blue-600')
-                : (darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700')
-            } border-b-2 ${activeTab === 'favorites' ? 'border-blue-500' : 'border-transparent'}`}
-            onClick={() => setActiveTab('favorites')}
-          >
-            收藏夹
-          </button>
-          <button
-            className={`px-6 py-3 text-sm font-medium ${
               activeTab === 'history'
                 ? (darkMode ? 'border-blue-500 text-blue-500' : 'border-blue-500 text-blue-600')
                 : (darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700')
@@ -261,31 +295,78 @@ const Calculator = ({ darkMode }) => {
           </button>
         </div>
         
-        {/* 内容区域 */}
         <div className="p-6">
           {activeTab === 'calculator' ? (
-            // 计算器内容
             <>
               <form onSubmit={handleSubmit} className="mb-6">
-                <div className="mb-4">
+                <div className="mb-4 relative">
                   <label htmlFor="math-input" className="block mb-2 font-medium text-lg">
                     输入数学问题
                   </label>
                   <div className={`rounded-lg overflow-hidden border-2 ${darkMode ? 'border-gray-600' : 'border-blue-300'} focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200`}>
                     <textarea
+                      ref={inputRef}
                       id="math-input"
                       value={input}
                       onChange={handleInputChange}
+                      onKeyDown={handleKeyDown}
                       className={`w-full p-4 focus:outline-none font-medium text-lg ${
                         darkMode 
                           ? 'bg-gray-700 text-white' 
                           : 'bg-white text-gray-800'
                       }`}
-                      placeholder="例如：求 ∫sin(x)dx 或 求解方程 x^2+3x-4=0"
+                      placeholder="例如：解方程 x^2+3x-4=0 或 计算积分 ∫sin(x)dx"
                       rows={4}
                     />
+                    
+                    {/* 输入建议下拉框 */}
+                    {inputSuggestions.length > 0 && (
+                      <div className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg overflow-hidden ${
+                        darkMode ? 'bg-gray-700' : 'bg-white'
+                      } border ${
+                        darkMode ? 'border-gray-600' : 'border-gray-200'
+                      }`}>
+                        {inputSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className={`px-4 py-2 cursor-pointer ${
+                              index === selectedSuggestionIndex
+                                ? (darkMode ? 'bg-blue-600' : 'bg-blue-100')
+                                : ''
+                            } ${
+                              darkMode
+                                ? 'hover:bg-gray-600 text-gray-200'
+                                : 'hover:bg-gray-100 text-gray-800'
+                            }`}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                          >
+                            {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
+                
+                {keywords.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-sm font-medium mb-2">识别到的关键词：</div>
+                    <div className="flex flex-wrap gap-2">
+                      {keywords.map((keyword, index) => (
+                        <span
+                          key={index}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            darkMode
+                              ? 'bg-blue-900/50 text-blue-300'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <MathKeypad onSymbolClick={handleKeypadInput} darkMode={darkMode} />
                 
@@ -325,15 +406,33 @@ const Calculator = ({ darkMode }) => {
               
               {renderError(error)}
               
-              {/* 如果有历史记录，显示一个折叠的历史面板 */}
-              {history.length > 0 && !loading && !error && (
-                <div className="mb-6 mt-6">
-                  <HistoryPanel 
-                    darkMode={darkMode} 
-                    history={history.slice(0, 3)} 
-                    onSelectHistoryItem={handleSelectHistoryItem}
-                    onClearHistory={() => setActiveTab('history')}
-                  />
+              {formulaSuggestions.length > 0 && (
+                <div className="mb-6">
+                  <div className="text-lg font-medium mb-4">相关公式建议：</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formulaSuggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-lg ${
+                          darkMode
+                            ? 'bg-gray-700 border-gray-600'
+                            : 'bg-gray-50 border-gray-200'
+                        } border`}
+                      >
+                        <div className="text-sm font-medium text-gray-500 mb-2">
+                          {suggestion.category}
+                        </div>
+                        <div className="mb-2">
+                          {renderLatex(suggestion.formula)}
+                        </div>
+                        <div className={`text-sm ${
+                          darkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          {suggestion.explanation}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               
@@ -357,7 +456,7 @@ const Calculator = ({ darkMode }) => {
                     {result.explanation && (
                       <div className="mt-8">
                         <div className={`px-4 py-2 ${darkMode ? 'bg-gray-600' : 'bg-blue-100'} rounded-t-lg`}>
-                          <h4 className="text-lg font-bold">AI解析</h4>
+                          <h4 className="text-lg font-bold">计算解析</h4>
                         </div>
                         <div className={`p-5 rounded-b-lg ${darkMode ? 'bg-gray-600 bg-opacity-50 text-gray-200' : 'bg-white text-gray-700'} border ${darkMode ? 'border-gray-600' : 'border-blue-100'}`}>
                           {result.explanation}
@@ -369,7 +468,6 @@ const Calculator = ({ darkMode }) => {
               )}
             </>
           ) : activeTab === 'history' ? (
-            // 历史记录内容
             <div className="mb-6">
               <HistoryPanel 
                 darkMode={darkMode} 
@@ -378,18 +476,13 @@ const Calculator = ({ darkMode }) => {
                 onClearHistory={handleClearHistory}
               />
             </div>
-          ) : activeTab === 'favorites' ? (
-            // 收藏夹内容
-            <FormulaLibrary darkMode={darkMode} showFavoritesOnly={true} />
           ) : (
-            // 公式库内容
-            <FormulaLibrary darkMode={darkMode} showFavoritesOnly={false} />
+            <FormulaLibrary darkMode={darkMode} />
           )}
         </div>
         
-        {/* 底部版权信息 */}
         <div className={`px-6 py-3 text-center text-sm ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
-          © 2024 数学AI计算器 | 基于 Qwen2.5-Math
+          © 2024 数学计算器 | 基于 SymPy 和 NumPy
         </div>
       </div>
     </div>
