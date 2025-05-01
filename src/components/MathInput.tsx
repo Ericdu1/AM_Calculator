@@ -47,9 +47,35 @@ const MathInput: React.FC<{
 
       setLoading(true);
       try {
-        const response = await fetch(`/api/suggestions?input=${encodeURIComponent(value)}`);
-        const data = await response.json();
-        setSuggestions(data.suggestions || []);
+        // 这里模拟API调用
+        const mockSuggestions: Suggestion[] = [
+          {
+            label: '解方程',
+            detail: '求解一元二次方程',
+            type: 'template',
+            insertText: '解方程 x^2 + 3x + 2 = 0'
+          },
+          {
+            label: '转换标准型',
+            detail: '将方程转换为标准形式',
+            type: 'transform',
+            insertText: '转换标准型 x^2 + 4'
+          },
+          {
+            label: '转换斜截式',
+            detail: '将直线方程转换为斜截式',
+            type: 'transform',
+            insertText: '转换斜截式 2x + 3y = 6'
+          },
+          {
+            label: '转换参数方程',
+            detail: '转换为参数方程形式',
+            type: 'transform',
+            insertText: '转换参数方程 x^2/4 + y^2/9 = 1'
+          }
+        ];
+
+        setSuggestions(value.startsWith('转换') ? mockSuggestions.filter(s => s.type === 'transform') : mockSuggestions);
         setSelectedIndex(-1);
       } catch (error) {
         console.error('获取建议失败:', error);
@@ -110,8 +136,10 @@ const MathInput: React.FC<{
         return <FunctionsIcon />;
       case 'template':
         return <CalculateIcon />;
-      default:
+      case 'transform':
         return <TransformIcon />;
+      default:
+        return <CalculateIcon />;
     }
   };
 
@@ -122,7 +150,7 @@ const MathInput: React.FC<{
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="输入数学表达式（如：解方程、求导数、转换为标准型等）"
+        placeholder="输入数学表达式（如：解方程、求导数、转换标准型等）"
         inputRef={inputRef}
         multiline
         rows={2}
