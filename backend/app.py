@@ -1,11 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import os
 import sys
 import time
 from api.math_solver import MathSolver
 
-# 初始化Flask应用
 app = Flask(__name__)
 CORS(app, resources={
     r"/api/*": {
@@ -15,19 +13,18 @@ CORS(app, resources={
     }
 })
 
-# 初始化数学解决器
-math_solver = None
+# 全局初始化模型，兼容flask run和python app.py
+print("初始化数学解决器...")
+math_solver = MathSolver()
+print("数学解决器初始化成功")
 
 @app.route('/api/solve', methods=['POST'])
 def solve():
     """处理数学问题求解请求"""
     if not request.json or 'query' not in request.json:
         return jsonify({'error': '请提供数学问题查询'}), 400
-    
     query = request.json['query']
-    
     try:
-        # 使用数学解决器处理查询
         result = math_solver.solve(query)
         return jsonify(result)
     except Exception as e:
@@ -39,18 +36,6 @@ def health_check():
     """简单的健康检查端点"""
     return jsonify({"status": "ok", "timestamp": time.time()})
 
-def initialize_model():
-    """初始化数学解决器模型"""
-    global math_solver
-    
-    try:
-        print("初始化数学解决器...")
-        math_solver = MathSolver()
-        print("数学解决器初始化成功")
-    except Exception as e:
-        print(f"数学解决器初始化失败: {str(e)}", file=sys.stderr)
-        sys.exit(1)
-
+# 兼容 flask run 和 python app.py 两种启动方式
 if __name__ == '__main__':
-    initialize_model()
     app.run(debug=True, host='0.0.0.0', port=5000) 

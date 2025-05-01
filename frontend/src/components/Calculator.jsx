@@ -103,13 +103,84 @@ const Calculator = ({ darkMode }) => {
     try {
       const html = katex.renderToString(latex, {
         throwOnError: false,
-        displayMode: true
+        displayMode: true,
+        fleqn: true, // 启用左对齐
+        maxSize: 1.5, // 最大缩放比例
+        minRuleThickness: 0.06, // 最小线宽
+        macros: {
+          "\\RR": "\\mathbb{R}",
+          "\\NN": "\\mathbb{N}",
+          "\\ZZ": "\\mathbb{Z}",
+          "\\QQ": "\\mathbb{Q}",
+          "\\CC": "\\mathbb{C}"
+        }
       });
-      return <div dangerouslySetInnerHTML={{ __html: html }} />;
+      return (
+        <div 
+          className={`katex-display ${darkMode ? 'text-gray-200' : 'text-gray-800'} scrollbar-${darkMode ? 'dark' : 'light'}`}
+          dangerouslySetInnerHTML={{ __html: html }} 
+        />
+      );
     } catch (error) {
       console.error("LaTeX渲染错误:", error);
-      return <div className="text-red-500">LaTeX渲染错误: {latex}</div>;
+      return (
+        <div className={`p-4 rounded-lg ${darkMode ? 'bg-red-900/30 text-red-300' : 'bg-red-100 text-red-700'} border-l-4 border-red-500`}>
+          <div className="flex items-center">
+            <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span>LaTeX渲染错误: {latex}</span>
+          </div>
+        </div>
+      );
     }
+  };
+
+  const renderError = (error) => {
+    if (!error) return null;
+    
+    return (
+      <div className={`mt-4 p-4 rounded-lg border-l-4 ${darkMode ? 'border-red-500 bg-red-900/20' : 'border-red-500 bg-red-50'} transition-all duration-300`}>
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            <svg 
+              className={`h-5 w-5 ${darkMode ? 'text-red-400' : 'text-red-500'}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+              />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className={`text-sm font-medium ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+              计算错误
+            </h3>
+            <div className={`mt-2 text-sm ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+              {error}
+            </div>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  darkMode 
+                    ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500 text-white' 
+                    : 'bg-red-100 hover:bg-red-200 focus:ring-red-500 text-red-800'
+                }`}
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -226,16 +297,7 @@ const Calculator = ({ darkMode }) => {
                 </div>
               </form>
               
-              {error && (
-                <div className="p-4 mb-6 rounded-lg bg-red-100 border-l-4 border-red-500 text-red-700 dark:bg-red-900/30 dark:text-red-400 dark:border-red-500">
-                  <div className="flex items-center">
-                    <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                    {error}
-                  </div>
-                </div>
-              )}
+              {renderError(error)}
               
               {/* 如果有历史记录，显示一个折叠的历史面板 */}
               {history.length > 0 && !loading && !error && (

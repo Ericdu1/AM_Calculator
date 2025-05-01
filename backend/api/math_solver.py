@@ -1,691 +1,145 @@
 import os
 import sys
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import time
 
 class MathSolver:
-    """数学问题解决器（测试模式）"""
-    
-    def __init__(self, model_path=None):
-        """
-        初始化数学解决器（测试模式）
-        """
-        print("初始化测试模式数学解决器")
-    
-    def solve(self, query):
-        """
-        解决数学问题（测试模式）
-        
-        参数:
-            query: 用户输入的数学问题
-            
-        返回:
-            包含解决方案的字典
-        """
-        # 预处理查询，去除空格和一些常见的前缀词
-        clean_query = query.replace(" ", "").lower()
-        for prefix in ["求解", "计算", "化简", "求"]:
-            if clean_query.startswith(prefix):
-                clean_query = clean_query[len(prefix):]
-        
-        # 基础运算类
-        if "25*3+12/4" in clean_query:
-            return {
-                'query': query,
-                'latex': '25 \\times 3 + \\frac{12}{4} = 78',
-                'explanation': '这是一个基础四则运算问题，需要注意运算优先级：\n\n1. 先计算乘除\n2. 再计算加减',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '计算乘法',
-                        'latex': '25 \\times 3 = 75',
-                        'explanation': '先计算25乘以3'
-                    },
-                    {
-                        'number': '2',
-                        'title': '计算除法',
-                        'latex': '12 \\div 4 = 3',
-                        'explanation': '同时计算12除以4'
-                    },
-                    {
-                        'number': '3',
-                        'title': '计算加法',
-                        'latex': '75 + 3 = 78',
-                        'explanation': '最后将两个结果相加'
-                    }
-                ]
-            }
-        # 简单计算示例
-        elif "2+2" in clean_query:
-            return {
-                'query': query,
-                'latex': '2 + 2 = 4',
-                'explanation': '这是基本的加法运算。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '加法运算',
-                        'latex': '2 + 2 = 4',
-                        'explanation': '直接将两个数相加'
-                    }
-                ]
-            }
-        # 代数方程类
-        elif "x^2-5x+6=0" in clean_query:
-            return {
-                'query': query,
-                'latex': 'x^2 - 5x + 6 = 0 \\implies x = 2 \\text{ or } x = 3',
-                'explanation': '这是一个二次方程，可以通过以下方法求解：\n\n1. 因式分解法\n2. 求根公式\n3. 配方法',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '观察系数',
-                        'latex': 'a=1, b=-5, c=6',
-                        'explanation': '二次项系数为1，一次项系数为-5，常数项为6'
-                    },
-                    {
-                        'number': '2',
-                        'title': '因式分解',
-                        'latex': 'x^2 - 5x + 6 = (x-2)(x-3)',
-                        'explanation': '找到两个数，它们的和为-5，积为6'
-                    },
-                    {
-                        'number': '3',
-                        'title': '求解',
-                        'latex': 'x = 2 \\text{ or } x = 3',
-                        'explanation': '令每个因式等于0，得到两个解'
-                    }
-                ]
-            }
-        # 三角函数类
-        elif "sin^2(x)+cos^2(x)" in clean_query:
-            return {
-                'query': query,
-                'latex': '\\sin^2(x) + \\cos^2(x) = 1',
-                'explanation': '这是三角函数的基本恒等式之一，也称为毕达哥拉斯恒等式：\n\n1. 几何意义：单位圆上的点的坐标平方和\n2. 可用于简化三角表达式\n3. 是许多其他三角恒等式的基础',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '几何解释',
-                        'latex': '\\text{在单位圆上：} x^2 + y^2 = 1',
-                        'explanation': '单位圆上任意点的坐标可以表示为(cos(x), sin(x))'
-                    },
-                    {
-                        'number': '2',
-                        'title': '代入坐标',
-                        'latex': '\\cos^2(x) + \\sin^2(x) = 1',
-                        'explanation': '将点的坐标代入圆的方程'
-                    },
-                    {
-                        'number': '3',
-                        'title': '验证',
-                        'latex': '\\forall x \\in \\mathbb{R}: \\sin^2(x) + \\cos^2(x) = 1',
-                        'explanation': '这个等式对所有实数x都成立'
-                    }
-                ]
-            }
-        # 极限类
-        elif "lim(x→0)sin(x)/x" in clean_query:
-            return {
-                'query': query,
-                'latex': '\\lim_{x \\to 0} \\frac{\\sin(x)}{x} = 1',
-                'explanation': '这是一个重要的基本极限。这个极限在微积分中经常使用：\n\n1. 不能直接代入x=0\n2. 可以通过几何方法理解\n3. 也可以用夹逼定理证明',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '分析极限形式',
-                        'latex': '\\text{当 } x \\to 0 \\text{ 时，分子分母都趋于0}',
-                        'explanation': '这是一个0/0型的未定式'
-                    },
-                    {
-                        'number': '2',
-                        'title': '几何意义',
-                        'latex': '\\frac{\\sin(x)}{x} = \\frac{\\text{对边}}{\\text{弧长}}',
-                        'explanation': '这个比值表示弧度为x的扇形中，正弦值与弧长的比值'
-                    },
-                    {
-                        'number': '3',
-                        'title': '得出结论',
-                        'latex': '\\lim_{x \\to 0} \\frac{\\sin(x)}{x} = 1',
-                        'explanation': '当x趋近于0时，这个比值趋近于1'
-                    }
-                ]
-            }
-        # 导数类
-        elif "d/dx(e^x*sin(x))" in clean_query:
-            return {
-                'query': query,
-                'latex': '\\frac{d}{dx}(e^x \\sin(x)) = e^x\\sin(x) + e^x\\cos(x)',
-                'explanation': '这是一个需要使用乘积法则的导数问题：\n\n1. 使用乘积法则：(uv)′ = u′v + uv′\n2. 分别求出各个函数的导数\n3. 代入公式得到结果',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '使用乘积法则',
-                        'latex': '\\frac{d}{dx}(e^x \\sin(x)) = \\frac{d}{dx}(e^x)\\sin(x) + e^x\\frac{d}{dx}(\\sin(x))',
-                        'explanation': '将乘积法则应用于e^x和sin(x)'
-                    },
-                    {
-                        'number': '2',
-                        'title': '计算各部分导数',
-                        'latex': '\\frac{d}{dx}(e^x) = e^x, \\frac{d}{dx}(\\sin(x)) = \\cos(x)',
-                        'explanation': '求出e^x和sin(x)的导数'
-                    },
-                    {
-                        'number': '3',
-                        'title': '代入并化简',
-                        'latex': 'e^x\\sin(x) + e^x\\cos(x)',
-                        'explanation': '将各部分导数代入乘积法则公式'
-                    }
-                ]
-            }
-        # 积分类
-        elif "∫(x^3+2x)dx" in clean_query:
-            return {
-                'query': query,
-                'latex': '\\int(x^3 + 2x)dx = \\frac{x^4}{4} + x^2 + C',
-                'explanation': '这是一个不定积分问题，需要使用以下规则：\n\n1. 幂函数积分法则\n2. 线性运算法则\n3. 不要忘记积分常数',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '拆分积分',
-                        'latex': '\\int x^3dx + \\int 2xdx',
-                        'explanation': '使用积分的线性性质，将积分拆分'
-                    },
-                    {
-                        'number': '2',
-                        'title': '分别积分',
-                        'latex': '\\frac{x^4}{4} + x^2',
-                        'explanation': '对x³使用幂函数积分法则：n+1=4，对2x积分得到x²'
-                    },
-                    {
-                        'number': '3',
-                        'title': '加上积分常数',
-                        'latex': '\\frac{x^4}{4} + x^2 + C',
-                        'explanation': '不定积分需要加上积分常数C'
-                    }
-                ]
-            }
-        elif "15*6-3" in clean_query:
-            return {
-                'query': query,
-                'latex': '15 \\times 6 - 3 = 87',
-                'explanation': '这是一个基本的算术运算问题，让我们一步步解决：\n\n1. 首先计算乘法：15 × 6 = 90\n2. 然后进行减法：90 - 3 = 87\n\n根据运算优先级，我们先计算乘法，再进行减法运算。这里没有用到括号，所以直接按照从左到右的顺序进行计算即可。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '计算乘法',
-                        'latex': '15 \\times 6 = 90',
-                        'explanation': '按照运算优先级，先计算乘法。15乘以6等于90。'
-                    },
-                    {
-                        'number': '2',
-                        'title': '计算减法',
-                        'latex': '90 - 3 = 87',
-                        'explanation': '用第一步得到的结果90减去3，得到最终结果87。'
-                    }
-                ]
-            }
-        elif "d/dx(x^2+3x)" in clean_query:
-            return {
-                'query': query,
-                'latex': '\\frac{d}{dx}(x^2 + 3x) = 2x + 3',
-                'explanation': '这是一个求导问题，我们需要对多项式 x² + 3x 进行求导。让我们运用导数的基本规则：\n\n1. 幂函数求导法则：对于 x^n，其导数为 nx^(n-1)\n2. 线性项求导：常数项的导数为常数本身\n3. 和的导数等于导数的和\n\n最终得到：2x + 3，这是一个一次函数。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '对 x² 求导',
-                        'latex': '\\frac{d}{dx}(x^2) = 2x',
-                        'explanation': '使用幂函数求导法则：当n=2时，导数为2x^(2-1) = 2x'
-                    },
-                    {
-                        'number': '2',
-                        'title': '对 3x 求导',
-                        'latex': '\\frac{d}{dx}(3x) = 3',
-                        'explanation': '线性项3x求导，系数3保持不变，x的导数为1，所以结果为3'
-                    },
-                    {
-                        'number': '3',
-                        'title': '合并结果',
-                        'latex': '2x + 3',
-                        'explanation': '根据导数的加法法则，将两部分的导数相加得到最终结果'
-                    }
-                ]
-            }
-        elif "∫(x^2+2x)dx" in clean_query:
-            return {
-                'query': query,
-                'latex': '\\int(x^2 + 2x)dx = \\frac{x^3}{3} + x^2 + C',
-                'explanation': '这是一个不定积分问题。我们需要对多项式 x² + 2x 进行积分。运用以下积分规则：\n\n1. 幂函数积分法则：∫x^n dx = (x^(n+1))/(n+1) + C\n2. 线性项积分：∫ax dx = (ax²)/2 + C\n3. 和的积分等于积分的和\n\n注意：不要忘记加上积分常数C！',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '对 x² 积分',
-                        'latex': '\\int x^2 dx = \\frac{x^3}{3}',
-                        'explanation': '使用幂函数积分法则：n=2时，∫x² dx = x³/3'
-                    },
-                    {
-                        'number': '2',
-                        'title': '对 2x 积分',
-                        'latex': '\\int 2x dx = x^2',
-                        'explanation': '2x的积分：系数2保持不变，x的积分为x²/2，所以结果为x²'
-                    },
-                    {
-                        'number': '3',
-                        'title': '合并结果并加上积分常数',
-                        'latex': '\\frac{x^3}{3} + x^2 + C',
-                        'explanation': '将两部分积分相加，并加上积分常数C得到最终结果'
-                    }
-                ]
-            }
-        # 简单计算2+3=5
-        elif "2+3" in clean_query:
-            return {
-                'query': query,
-                'latex': '2 + 3 = 5',
-                'explanation': '这是基本的加法运算。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '加法运算',
-                        'latex': '2 + 3 = 5',
-                        'explanation': '直接将两个数相加'
-                    }
-                ]
-            }
-        # 简单计算2-3=-1
-        elif "2-3" in clean_query:
-            return {
-                'query': query,
-                'latex': '2 - 3 = -1',
-                'explanation': '这是基本的减法运算。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '减法运算',
-                        'latex': '2 - 3 = -1',
-                        'explanation': '从2中减去3得到-1'
-                    }
-                ]
-            }
-        # 简单计算2*3=6
-        elif "2*3" in clean_query:
-            return {
-                'query': query,
-                'latex': '2 \\times 3 = 6',
-                'explanation': '这是基本的乘法运算。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '乘法运算',
-                        'latex': '2 \\times 3 = 6',
-                        'explanation': '将2乘以3得到6'
-                    }
-                ]
-            }
-        # x^2+2x+1 完全平方式
-        elif "x^2+2x+1" in clean_query:
-            return {
-                'query': query,
-                'latex': 'x^2 + 2x + 1 = (x + 1)^2',
-                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² + 2x + 1 重写为 (x + 1)²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = 1。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '识别完全平方式',
-                        'latex': 'x^2 + 2x + 1',
-                        'explanation': '观察表达式的形式：二次项 x²，一次项 2x，常数项 1'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用完全平方公式',
-                        'latex': '(a + b)^2 = a^2 + 2ab + b^2',
-                        'explanation': '对照完全平方公式，这里 a = x，b = 1'
-                    },
-                    {
-                        'number': '3',
-                        'title': '重写为完全平方式',
-                        'latex': 'x^2 + 2x + 1 = (x + 1)^2',
-                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x + 1)²'
-                    }
-                ]
-            }
-        # x^2+4x+4 完全平方式
-        elif "x^2+4x+4" in clean_query:
-            return {
-                'query': query,
-                'latex': 'x^2 + 4x + 4 = (x + 2)^2',
-                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² + 4x + 4 重写为 (x + 2)²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = 2。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '识别完全平方式',
-                        'latex': 'x^2 + 4x + 4',
-                        'explanation': '观察表达式的形式：二次项 x²，一次项 4x，常数项 4'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用完全平方公式',
-                        'latex': '(a + b)^2 = a^2 + 2ab + b^2',
-                        'explanation': '对照完全平方公式，这里 a = x，b = 2，因为2ab = 2·x·2 = 4x'
-                    },
-                    {
-                        'number': '3',
-                        'title': '重写为完全平方式',
-                        'latex': 'x^2 + 4x + 4 = (x + 2)^2',
-                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x + 2)²'
-                    }
-                ]
-            }
-        # x^2-4x+4 完全平方式
-        elif "x^2-4x+4" in clean_query:
-            return {
-                'query': query,
-                'latex': 'x^2 - 4x + 4 = (x - 2)^2',
-                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² - 4x + 4 重写为 (x - 2)²。\n\n这个表达式满足完全平方公式：(a - b)² = a² - 2ab + b²，其中 a = x, b = 2。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '识别完全平方式',
-                        'latex': 'x^2 - 4x + 4',
-                        'explanation': '观察表达式的形式：二次项 x²，一次项 -4x，常数项 4'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用完全平方公式',
-                        'latex': '(a - b)^2 = a^2 - 2ab + b^2',
-                        'explanation': '对照完全平方公式，这里 a = x，b = 2，因为-2ab = -2·x·2 = -4x'
-                    },
-                    {
-                        'number': '3',
-                        'title': '重写为完全平方式',
-                        'latex': 'x^2 - 4x + 4 = (x - 2)^2',
-                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x - 2)²'
-                    }
-                ]
-            }
-        # x^2+6x+9 完全平方式
-        elif "x^2+6x+9" in clean_query:
-            return {
-                'query': query,
-                'latex': 'x^2 + 6x + 9 = (x + 3)^2',
-                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² + 6x + 9 重写为 (x + 3)²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = 3。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '识别完全平方式',
-                        'latex': 'x^2 + 6x + 9',
-                        'explanation': '观察表达式的形式：二次项 x²，一次项 6x，常数项 9'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用完全平方公式',
-                        'latex': '(a + b)^2 = a^2 + 2ab + b^2',
-                        'explanation': '对照完全平方公式，这里 a = x，b = 3，因为2ab = 2·x·3 = 6x，b² = 3² = 9'
-                    },
-                    {
-                        'number': '3',
-                        'title': '重写为完全平方式',
-                        'latex': 'x^2 + 6x + 9 = (x + 3)^2',
-                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x + 3)^2'
-                    }
-                ]
-            }
-        # x^2-6x+9 完全平方式
-        elif "x^2-6x+9" in clean_query:
-            return {
-                'query': query,
-                'latex': 'x^2 - 6x + 9 = (x - 3)^2',
-                'explanation': '这是一个完全平方公式的例子。可以将表达式 x² - 6x + 9 重写为 (x - 3)^2。\n\n这个表达式满足完全平方公式：(a - b)² = a² - 2ab + b²，其中 a = x, b = 3。',
-                'steps': [
-                    {
-                        'number': '1',
-                        'title': '识别完全平方式',
-                        'latex': 'x^2 - 6x + 9',
-                        'explanation': '观察表达式的形式：二次项 x²，一次项 -6x，常数项 9'
-                    },
-                    {
-                        'number': '2',
-                        'title': '应用完全平方公式',
-                        'latex': '(a - b)^2 = a^2 - 2ab + b^2',
-                        'explanation': '对照完全平方公式，这里 a = x，b = 3，因为-2ab = -2·x·3 = -6x，b² = 3² = 9'
-                    },
-                    {
-                        'number': '3',
-                        'title': '重写为完全平方式',
-                        'latex': 'x^2 - 6x + 9 = (x - 3)^2',
-                        'explanation': '根据完全平方公式，可以将原表达式重写为 (x - 3)^2'
-                    }
-                ]
-            }
-
-        else:
-            # 尝试检测是否为完全平方式
-            # 形如 x^2 + 2bx + b^2 = (x + b)^2 或 x^2 - 2bx + b^2 = (x - b)^2
-            match_positive = re.search(r'x\^2\+(\d+)x\+(\d+)', clean_query)
-            match_negative = re.search(r'x\^2\-(\d+)x\+(\d+)', clean_query)
-            
-            if match_positive:
-                b_times_2 = int(match_positive.group(1))
-                c = int(match_positive.group(2))
-                
-                # 检查是否为完全平方式：如果 c = (b_times_2/2)²
-                b = b_times_2 / 2
-                if b.is_integer() and c == int(b) ** 2:
-                    b = int(b)
-                    return {
-                        'query': query,
-                        'latex': f'x^2 + {b_times_2}x + {c} = (x + {b})^2',
-                        'explanation': f'这是一个完全平方公式的例子。可以将表达式 x² + {b_times_2}x + {c} 重写为 (x + {b})²。\n\n这个表达式满足完全平方公式：(a + b)² = a² + 2ab + b²，其中 a = x, b = {b}。',
-                        'steps': [
-                            {
-                                'number': '1',
-                                'title': '识别完全平方式',
-                                'latex': f'x^2 + {b_times_2}x + {c}',
-                                'explanation': f'观察表达式的形式：二次项 x²，一次项 {b_times_2}x，常数项 {c}'
-                            },
-                            {
-                                'number': '2',
-                                'title': '应用完全平方公式',
-                                'latex': '(a + b)^2 = a^2 + 2ab + b^2',
-                                'explanation': f'对照完全平方公式，这里 a = x，b = {b}，因为2ab = 2·x·{b} = {b_times_2}x，b² = {b}² = {c}'
-                            },
-                            {
-                                'number': '3',
-                                'title': '重写为完全平方式',
-                                'latex': f'x^2 + {b_times_2}x + {c} = (x + {b})^2',
-                                'explanation': f'根据完全平方公式，可以将原表达式重写为 (x + {b})²'
-                            }
-                        ]
-                    }
-            elif match_negative:
-                b_times_2 = int(match_negative.group(1))
-                c = int(match_negative.group(2))
-                
-                # 检查是否为完全平方式：如果 c = (b_times_2/2)²
-                b = b_times_2 / 2
-                if b.is_integer() and c == int(b) ** 2:
-                    b = int(b)
-                    return {
-                        'query': query,
-                        'latex': f'x^2 - {b_times_2}x + {c} = (x - {b})^2',
-                        'explanation': f'这是一个完全平方公式的例子。可以将表达式 x² - {b_times_2}x + {c} 重写为 (x - {b})²。\n\n这个表达式满足完全平方公式：(a - b)² = a² - 2ab + b²，其中 a = x, b = {b}。',
-                        'steps': [
-                            {
-                                'number': '1',
-                                'title': '识别完全平方式',
-                                'latex': f'x^2 - {b_times_2}x + {c}',
-                                'explanation': f'观察表达式的形式：二次项 x²，一次项 -{b_times_2}x，常数项 {c}'
-                            },
-                            {
-                                'number': '2',
-                                'title': '应用完全平方公式',
-                                'latex': '(a - b)^2 = a^2 - 2ab + b^2',
-                                'explanation': f'对照完全平方公式，这里 a = x，b = {b}，因为-2ab = -2·x·{b} = -{b_times_2}x，b² = {b}² = {c}'
-                            },
-                            {
-                                'number': '3',
-                                'title': '重写为完全平方式',
-                                'latex': f'x^2 - {b_times_2}x + {c} = (x - {b})^2',
-                                'explanation': f'根据完全平方公式，可以将原表达式重写为 (x - {b})²'
-                            }
-                        ]
-                    }
-            
-            # 针对任意查询，提供更有针对性的回应
-            try:
-                # 提取可能的表达式和运算符
-                expression = query.replace("求解", "").replace("计算", "").replace("化简", "").strip()
-                
-                # 如果查询中包含"="，则可能是方程求解问题
-                if "=" in expression:
-                    return {
-                        'query': query,
-                        'latex': expression,
-                        'explanation': f'这是一个方程求解问题。我们需要找到使等式成立的未知数的值。',
-                        'steps': [
-                            {
-                                'number': '1',
-                                'title': '理解方程',
-                                'latex': expression,
-                                'explanation': '首先我们需要理解这个方程的结构，确定它是一次方程、二次方程还是其他类型'
-                            },
-                            {
-                                'number': '2',
-                                'title': '应用求解方法',
-                                'latex': expression,
-                                'explanation': '根据方程类型选择合适的求解方法，如移项、因式分解、公式法等'
-                            }
-                        ]
-                    }
-                # 对于可能是表达式的情况
-                else:
-                    # 如果表达式中含有x²或x^2，可能是多项式
-                    if 'x^2' in expression or 'x²' in expression:
-                        return {
-                            'query': query,
-                            'latex': expression,
-                            'explanation': f'这是一个代数表达式，包含有二次项。我们可以对其进行分析、化简或其他操作。',
-                            'steps': [
-                                {
-                                    'number': '1',
-                                    'title': '分析表达式结构',
-                                    'latex': expression,
-                                    'explanation': '这是一个包含二次项的多项式，我们可以检查它是否为完全平方式或可以因式分解'
-                                },
-                                {
-                                    'number': '2',
-                                    'title': '尝试化简',
-                                    'latex': expression,
-                                    'explanation': '根据代数法则，可以将类似项合并，或者尝试配方法转化为完全平方式'
-                                }
-                            ]
-                        }
-                    # 普通表达式
-                    else:
-                        return {
-                            'query': query,
-                            'latex': expression,
-                            'explanation': f'这是一个数学表达式。我们需要理解表达式的含义并进行计算或分析。',
-                            'steps': [
-                                {
-                                    'number': '1',
-                                    'title': '理解表达式',
-                                    'latex': expression,
-                                    'explanation': '首先我们需要理解这个表达式的结构和包含的运算'
-                                },
-                                {
-                                    'number': '2',
-                                    'title': '计算过程',
-                                    'latex': expression,
-                                    'explanation': '使用适当的数学方法对表达式进行计算或分析'
-                                }
-                            ]
-                        }
-            except:
-                # 如果无法解析，提供通用响应
-                return {
-                    'query': query,
-                    'latex': '\\text{需要更多信息}',
-                    'explanation': '请提供更具体的数学问题，包括需要求解的表达式或方程。',
-                    'steps': [
-                        {
-                            'number': '1',
-                            'title': '问题描述不完整',
-                            'latex': '\\text{?}',
-                            'explanation': '无法根据当前信息提供准确解答'
-                        }
-                    ]
-                }
-
-    def _create_prompt(self, query):
-        """创建适合模型的提示词"""
-        return f"""请解决以下数学问题：
-
-问题: {query}
-
-请提供详细的解答步骤，最终答案，以及解题思路解析。如果答案包含数学表达式，请使用LaTeX格式表示。
-
-解答："""
-    
-    def _generate_answer(self, prompt):
-        """使用模型生成答案"""
+    """Qwen2.5-Math AI Calculator (No SymPy/NumPy)"""
+    def __init__(self):
+        print("Initializing Qwen2.5-Math AI Calculator")
+        self.result_cache = {}
         try:
-            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
-            outputs = self.model.generate(
-                inputs.input_ids,
-                max_new_tokens=1024,
-                temperature=0.2,
-                top_p=0.9,
-                repetition_penalty=1.1
-            )
-            return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            model_name = "Qwen/Qwen2.5-Math-7B"
+            print(f"Loading model: {model_name}")
+            self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map={"": "cpu"}, trust_remote_code=True)
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+            print("Model loaded successfully")
         except Exception as e:
-            print(f"生成答案错误: {str(e)}", file=sys.stderr)
-            raise
-    
-    def _parse_response(self, response, query):
-        """
-        解析模型响应
-        
-        返回:
-            包含结果字段的字典:
-            - latex: 最终结果的LaTeX表达式
-            - explanation: 解题思路解析
-        """
-        result = {
-            'query': query,
-            'steps': [],
-            'latex': '',
-            'explanation': response
+            print(f"Model loading failed: {str(e)}")
+            self.model = None
+            self.tokenizer = None
+
+    def solve(self, query):
+        """主入口：仅用Qwen2.5-Math大模型推理"""
+        query = self._normalize_query(query)
+        if not self.model or not self.tokenizer:
+            return self._create_error_response(query, "AI模型未加载")
+        if query in self.result_cache:
+            return self.result_cache[query]
+        try:
+            prompt = self._build_prompt(query)
+            response = self._call_qwen(prompt)
+            result = self._parse_response(response)
+            # 简单格式校验
+            if not result['latex'] or not result['steps']:
+                result['success'] = False
+                result['explanation'] = "AI未能正确解析，请尝试换种表达方式。"
+            self.result_cache[query] = result
+            return result
+        except Exception as e:
+            print(f"AI推理异常: {str(e)}")
+            return self._create_error_response(query, str(e))
+
+    def _normalize_query(self, query):
+        query = ' '.join(query.split())
+        replacements = {
+            '^': '**',
+            '×': '*',
+            '÷': '/',
+            '（': '(',
+            '）': ')',
+            '²': '**2',
+            '³': '**3',
+            '·': '*'
         }
-        
-        # 尝试提取LaTeX表达式（通常在$符号之间）
-        latex_pattern = r'\$\$(.*?)\$\$|\$(.*?)\$'
-        latex_matches = re.finditer(latex_pattern, response, re.DOTALL)
-        latex_parts = []
-        
-        for match in latex_matches:
-            latex = match.group(1) or match.group(2)
-            if latex:
-                latex_parts.append(latex)
-        
-        if latex_parts:
-            # 使用第一个找到的LaTeX表达式作为结果
-            result['latex'] = latex_parts[0]
-            
-            # 如果我们能找到多个LaTeX表达式，将它们作为步骤添加
-            for i, latex in enumerate(latex_parts):
+        for old, new in replacements.items():
+            query = query.replace(old, new)
+        return query
+
+    def _build_prompt(self, query):
+        return f"""你是一个专业的数学AI助手，请详细解答下列数学问题：\n\n问题：{query}\n\n要求：\n1. 给出详细的解题步骤，每一步都用LaTeX公式表示。\n2. 最终答案用LaTeX公式高亮显示。\n3. 结尾给出简明的AI解析说明。\n4. 只输出数学相关内容，不要输出与数学无关的内容。\n\n解答："""
+
+    def _call_qwen(self, prompt):
+        messages = [
+            {"role": "system", "content": "你是一个专业的数学AI助手，擅长通过逐步的方式解答数学问题。"},
+            {"role": "user", "content": prompt}
+        ]
+        input_text = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        inputs = self.tokenizer(input_text, return_tensors="pt").to(self.model.device)
+        outputs = self.model.generate(
+            inputs.input_ids,
+            max_new_tokens=1024,
+            temperature=0.1,
+            top_p=0.95,
+            repetition_penalty=1.1
+        )
+        response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        if "assistant" in response:
+            response = response.split("assistant")[-1].strip()
+            if response.startswith(":"):
+                response = response[1:].strip()
+        return response
+
+    def _parse_response(self, response):
+        result = {
+            'success': True,
+            'latex': '',
+            'steps': [],
+            'explanation': ''
+        }
+        try:
+            # 提取所有LaTeX公式
+            latex_matches = re.finditer(r'\$(.*?)\$|\\\[(.*?)\\\]|\\\((.*?)\\\)', response, re.DOTALL)
+            latex_parts = []
+            for match in latex_matches:
+                latex = match.group(1) or match.group(2) or match.group(3)
+                if latex and latex.strip():
+                    latex_parts.append(latex.strip())
+            if latex_parts:
+                result['latex'] = latex_parts[-1]
+                step_number = 1
+                for latex in latex_parts[:-1]:
+                    step = {
+                        'number': str(step_number),
+                        'title': f'步骤 {step_number}',
+                        'latex': latex,
+                        'explanation': ''
+                    }
+                    result['steps'].append(step)
+                    step_number += 1
                 result['steps'].append({
-                    'number': str(i + 1),
-                    'title': f'步骤 {i + 1}',
-                    'latex': latex,
-                    'explanation': ''
+                    'number': str(step_number),
+                    'title': '最终结果',
+                    'latex': result['latex'],
+                    'explanation': '计算完成'
                 })
-        
-        # 尝试提取解析部分
-        explanation_parts = response.split('\n\n')
-        if len(explanation_parts) > 1:
-            # 假设最后一部分是解析
-            result['explanation'] = explanation_parts[-1]
-        
-        return result 
+            # 提取AI解析说明
+            explanations = re.split(r'\n\s*\n', response)
+            if explanations:
+                result['explanation'] = explanations[-1].strip()
+            return result
+        except Exception as e:
+            print(f"解析AI输出失败: {str(e)}")
+            result['success'] = False
+            result['explanation'] = "AI输出解析失败"
+            return result
+
+    def _create_error_response(self, query, msg):
+        return {
+            'success': False,
+            'latex': query,
+            'explanation': f'AI计算失败：{msg}',
+            'steps': [
+                {
+                    'number': '1',
+                    'title': '输入验证',
+                    'latex': query,
+                    'explanation': 'AI模型未能给出有效答案'
+                }
+            ]
+        } 
