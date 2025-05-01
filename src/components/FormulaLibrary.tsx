@@ -44,7 +44,7 @@ const formulaData: FormulaCategory[] = [
         id: 'alg1',
         title: '二次方程',
         latex: 'ax² + bx + c = 0',
-        description: '标准二次方程形式，求解公式：x = (-b ± √(b² - 4ac)) / 2a',
+        description: '标准二次方程形式，求解公式：x = (-b ± √(b² - 4ac)) / (2a)',
         example: '例：x² + 5x + 6 = 0',
         category: '基础代数',
         isFavorite: false
@@ -93,7 +93,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'adv1',
         title: '矩阵乘法',
-        latex: 'C = A × B',
+        latex: 'C = A · B',
         description: '矩阵乘法的一般形式',
         example: '例：2×2矩阵相乘',
         category: '高等代数',
@@ -134,7 +134,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'geo2',
         title: '三角形面积',
-        latex: 'A = \\frac{1}{2}bh = \\frac{1}{2}ab\\sin C',
+        latex: 'A = (1/2)bh = (1/2)ab·sin C',
         description: '三角形的面积公式，b为底边，h为高，C为夹角',
         example: '例：底10，高6的三角形面积为30',
         category: '平面几何',
@@ -152,7 +152,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'geo4',
         title: '梯形面积',
-        latex: 'A = \\frac{(a+b)h}{2}',
+        latex: 'A = (a + b)h/2',
         description: '梯形的面积公式，a,b为平行边，h为高',
         example: '例：上底3，下底7，高4的梯形面积为20',
         category: '平面几何',
@@ -166,7 +166,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'solid1',
         title: '球的体积',
-        latex: 'V = \\frac{4}{3}πr³',
+        latex: 'V = 4πr³/3',
         description: '球体积公式，r为半径',
         example: '例：半径为2的球体积为32π/3',
         category: '立体几何',
@@ -184,7 +184,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'solid3',
         title: '圆锥体积',
-        latex: 'V = \\frac{1}{3}πr²h',
+        latex: 'V = πr²h/3',
         description: '圆锥体积公式，r为底面半径，h为高',
         example: '例：底面半径3，高6的圆锥体积为18π',
         category: '立体几何',
@@ -239,7 +239,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'int1',
         title: '基本积分公式',
-        latex: '∫x^n dx = [x^(n+1)]/(n+1) + C',
+        latex: '∫x^n dx = x^(n+1)/(n+1) + C',
         description: '幂函数积分公式',
         example: '例：∫x² dx = x³/3 + C',
         category: '积分学',
