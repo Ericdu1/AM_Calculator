@@ -9,12 +9,21 @@ import {
   ListItemIcon,
   Popper,
   Typography,
-  CircularProgress
+  CircularProgress,
+  Button,
+  IconButton,
+  Tooltip,
+  Divider,
+  Grid
 } from '@mui/material';
 import {
   Functions as FunctionsIcon,
   Calculate as CalculateIcon,
-  Transform as TransformIcon
+  Transform as TransformIcon,
+  Send as SendIcon,
+  Clear as ClearIcon,
+  History as HistoryIcon,
+  Keyboard as KeyboardIcon
 } from '@mui/icons-material';
 
 interface Suggestion {
@@ -36,7 +45,24 @@ const MathInput: React.FC<{
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [showKeyboard, setShowKeyboard] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 数学键盘符号
+  const mathSymbols = [
+    { label: '+', tooltip: '加' },
+    { label: '-', tooltip: '减' },
+    { label: '×', tooltip: '乘' },
+    { label: '÷', tooltip: '除' },
+    { label: '^', tooltip: '指数' },
+    { label: '√', tooltip: '平方根' },
+    { label: 'π', tooltip: '圆周率' },
+    { label: '∫', tooltip: '积分' },
+    { label: '∑', tooltip: '求和' },
+    { label: '∏', tooltip: '连乘' },
+    { label: '∂', tooltip: '偏导' },
+    { label: '∞', tooltip: '无穷' },
+  ];
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -111,7 +137,7 @@ const MathInput: React.FC<{
           event.preventDefault();
           handleSuggestionSelect(suggestions[selectedIndex]);
         } else {
-          onSubmit(value);
+          handleSubmit();
         }
         break;
       case 'Escape':
@@ -130,6 +156,35 @@ const MathInput: React.FC<{
     }
   };
 
+  const handleSubmit = () => {
+    if (value.trim()) {
+      onSubmit(value);
+      setValue('');
+    }
+  };
+
+  const handleClear = () => {
+    setValue('');
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const insertSymbol = (symbol: string) => {
+    const input = inputRef.current;
+    if (input) {
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const newValue = value.substring(0, start) + symbol + value.substring(end);
+      setValue(newValue);
+      // 设置光标位置
+      setTimeout(() => {
+        input.setSelectionRange(start + symbol.length, start + symbol.length);
+        input.focus();
+      }, 0);
+    }
+  };
+
   const getIconForType = (type: string) => {
     switch (type) {
       case 'formula':
@@ -144,17 +199,104 @@ const MathInput: React.FC<{
   };
 
   return (
-    <Box sx={{ position: 'relative', width: '100%' }}>
-      <TextField
-        fullWidth
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="输入数学表达式（如：解方程、求导数、转换标准型等）"
-        inputRef={inputRef}
-        multiline
-        rows={2}
-      />
+    <Box sx={{ width: '100%' }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2
+        }}
+      >
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+              <TextField
+                fullWidth
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="输入数学表达式（如：解方程、求导数、转换标准型等）"
+                inputRef={inputRef}
+                multiline
+                rows={2}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontFamily: 'math',
+                    fontSize: '1.1rem',
+                  }
+                }}
+              />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Tooltip title="清除">
+                  <IconButton onClick={handleClear} size="small">
+                    <ClearIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="计算">
+                  <IconButton 
+                    onClick={handleSubmit}
+                    color="primary"
+                    size="small"
+                  >
+                    <SendIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Tooltip title="数学键盘">
+                  <IconButton 
+                    size="small"
+                    onClick={() => setShowKeyboard(!showKeyboard)}
+                    color={showKeyboard ? 'primary' : 'default'}
+                  >
+                    <KeyboardIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="历史记录">
+                  <IconButton size="small">
+                    <HistoryIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                提示：使用^表示指数，sqrt()表示平方根
+              </Typography>
+            </Box>
+          </Grid>
+
+          {showKeyboard && (
+            <Grid item xs={12}>
+              <Divider sx={{ my: 1 }} />
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {mathSymbols.map((symbol, index) => (
+                  <Tooltip key={index} title={symbol.tooltip}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => insertSymbol(symbol.label)}
+                      sx={{
+                        minWidth: '40px',
+                        height: '40px',
+                        fontFamily: 'math',
+                        fontSize: '1.1rem'
+                      }}
+                    >
+                      {symbol.label}
+                    </Button>
+                  </Tooltip>
+                ))}
+              </Box>
+            </Grid>
+          )}
+        </Grid>
+      </Paper>
 
       <Popper
         open={suggestions.length > 0}

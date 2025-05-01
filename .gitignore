@@ -1,5 +1,38 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production
+/build
+/dist
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
 # 依赖包
-node_modules/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -10,8 +43,6 @@ venv/
 ENV/
 
 # 构建文件
-/dist
-/build
 *.so
 .Python
 *.egg-info/
@@ -19,9 +50,6 @@ ENV/
 # 日志
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # 编辑器配置文件
 .idea/
@@ -30,7 +58,6 @@ yarn-error.log*
 *.swo
 
 # 系统文件
-.DS_Store
 Thumbs.db
 
 # 个人配置

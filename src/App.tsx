@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import {
-  Container,
   Box,
   Typography,
   Paper,
-  Drawer,
   List,
   ListItem,
   ListItemIcon,
@@ -16,7 +14,11 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
-  Divider
+  Divider,
+  Grid,
+  Button,
+  Card,
+  CardContent,
 } from '@mui/material';
 import {
   History as HistoryIcon,
@@ -24,7 +26,9 @@ import {
   Functions as FunctionsIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
-  Menu as MenuIcon
+  Help as HelpIcon,
+  Calculate as CalculateIcon,
+  LibraryBooks as LibraryIcon,
 } from '@mui/icons-material';
 import MathInput from './components/MathInput';
 import HelpDialog from './components/HelpDialog';
@@ -35,16 +39,19 @@ function App() {
   const [steps, setSteps] = useState<string[]>([]);
   const [explanation, setExplanation] = useState<string>('');
   const [helpOpen, setHelpOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [selectedTool, setSelectedTool] = useState('calculator');
 
   const theme = createTheme({
     palette: {
       mode: darkMode ? 'dark' : 'light',
       primary: {
-        main: '#2196f3',
+        main: '#1976d2',
+      },
+      secondary: {
+        main: '#dc004e',
       },
       background: {
         default: darkMode ? '#303030' : '#f5f5f5',
@@ -88,120 +95,179 @@ function App() {
     }
   };
 
+  const quickGuide = [
+    {
+      title: '基本操作',
+      content: '输入数学表达式，支持基本运算、代数式、方程组等'
+    },
+    {
+      title: '特殊符号',
+      content: '使用^表示指数，sqrt()表示平方根，pi表示π'
+    },
+    {
+      title: '高级功能',
+      content: '支持微积分、线性代数、统计概率等高级数学运算'
+    },
+    {
+      title: '格式转换',
+      content: '可在不同数学表示法之间转换，支持LaTeX格式'
+    }
+  ];
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-        <AppBar position="fixed">
+        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Toolbar>
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={() => setDrawerOpen(true)}
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
-            </IconButton>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               智能数学计算器
             </Typography>
+            <IconButton color="inherit" onClick={() => setHelpOpen(true)}>
+              <HelpIcon />
+            </IconButton>
             <IconButton color="inherit" onClick={toggleDarkMode}>
               {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
             </IconButton>
           </Toolbar>
         </AppBar>
 
-        <Drawer
-          anchor="left"
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
+        {/* 左侧固定导航栏 */}
+        <Paper
+          elevation={3}
           sx={{
             width: 240,
             flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              width: 240,
-              boxSizing: 'border-box',
-            },
+            borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+            height: '100vh',
+            position: 'fixed',
+            pt: 8,
+            backgroundColor: theme.palette.background.paper,
           }}
         >
-          <Toolbar />
           <List>
-            <ListItem button onClick={() => setDrawerOpen(false)}>
+            <ListItem button selected={selectedTool === 'calculator'} onClick={() => setSelectedTool('calculator')}>
               <ListItemIcon>
-                <FunctionsIcon />
+                <CalculateIcon />
+              </ListItemIcon>
+              <ListItemText primary="计算器" />
+            </ListItem>
+            <ListItem button selected={selectedTool === 'library'} onClick={() => setSelectedTool('library')}>
+              <ListItemIcon>
+                <LibraryIcon />
               </ListItemIcon>
               <ListItemText primary="公式库" />
             </ListItem>
-            <ListItem button onClick={() => setDrawerOpen(false)}>
+            <ListItem button selected={selectedTool === 'history'} onClick={() => setSelectedTool('history')}>
               <ListItemIcon>
                 <HistoryIcon />
               </ListItemIcon>
               <ListItemText primary="历史记录" />
             </ListItem>
-            <ListItem button onClick={() => setDrawerOpen(false)}>
+            <ListItem button selected={selectedTool === 'favorites'} onClick={() => setSelectedTool('favorites')}>
               <ListItemIcon>
                 <BookmarkIcon />
               </ListItemIcon>
               <ListItemText primary="收藏夹" />
             </ListItem>
           </List>
-        </Drawer>
+        </Paper>
 
+        {/* 主要内容区域 */}
         <Box
           component="main"
           sx={{
             flexGrow: 1,
             p: 3,
+            ml: '240px', // 左侧导航栏宽度
             mt: 8,
             backgroundColor: theme.palette.background.default,
           }}
         >
-          <Container maxWidth="lg">
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                智能数学输入
-              </Typography>
-              <MathInput onSubmit={handleMathInputSubmit} />
-            </Paper>
-
-            {result && (
-              <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Grid container spacing={3}>
+            {/* 使用指南卡片 */}
+            <Grid item xs={12}>
+              <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                  计算结果
+                  使用指南
                 </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {result}
-                </Typography>
-
-                <Divider sx={{ my: 2 }} />
-
-                <Typography variant="h6" gutterBottom>
-                  解题步骤
-                </Typography>
-                <List>
-                  {steps.map((step, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={step} />
-                    </ListItem>
+                <Grid container spacing={2}>
+                  {quickGuide.map((guide, index) => (
+                    <Grid item xs={12} sm={6} md={3} key={index}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography variant="subtitle1" color="primary" gutterBottom>
+                            {guide.title}
+                          </Typography>
+                          <Typography variant="body2">
+                            {guide.content}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
                   ))}
-                </List>
-
-                <Divider sx={{ my: 2 }} />
-
-                <Typography variant="h6" gutterBottom>
-                  详细解析
-                </Typography>
-                <Typography variant="body1">
-                  {explanation}
-                </Typography>
+                </Grid>
               </Paper>
+            </Grid>
+
+            {/* 计算器输入区域 */}
+            <Grid item xs={12}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  智能数学输入
+                </Typography>
+                <MathInput onSubmit={handleMathInputSubmit} />
+              </Paper>
+            </Grid>
+
+            {/* 结果展示区域 */}
+            {result && (
+              <Grid item xs={12}>
+                <Paper elevation={3} sx={{ p: 3 }}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                    计算结果
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {result}
+                  </Typography>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Typography variant="h6" gutterBottom color="primary">
+                    解题步骤
+                  </Typography>
+                  <List>
+                    {steps.map((step, index) => (
+                      <ListItem key={index}>
+                        <ListItemText 
+                          primary={step}
+                          sx={{
+                            '& .MuiTypography-root': {
+                              fontFamily: 'math',
+                            },
+                          }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Typography variant="h6" gutterBottom color="primary">
+                    详细解析
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontFamily: 'math' }}>
+                    {explanation}
+                  </Typography>
+                </Paper>
+              </Grid>
             )}
-          </Container>
+          </Grid>
         </Box>
 
         <HelpDialog 
           open={helpOpen} 
-          onClose={() => setHelpOpen(!helpOpen)} 
+          onClose={() => setHelpOpen(false)} 
         />
       </Box>
     </ThemeProvider>

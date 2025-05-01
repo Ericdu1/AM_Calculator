@@ -1,43 +1,34 @@
-# 智能数学计算器
+# 智能数学计算器 (Math AI Calculator)
 
-一个基于React和TypeScript的智能数学计算器，支持多种数学表达式的计算和转换。
+一个基于React和TypeScript的智能数学计算器，提供直观的界面和强大的计算功能。
 
 ## 功能特点
 
-- 🧮 智能数学计算
-  - 基础运算（加减乘除、乘方、开方等）
-  - 方程求解（一元二次方程、多元方程组等）
-  - 微积分计算（导数、积分、极限等）
-  - 几何计算（平面几何、解析几何等）
-
-- 🔄 表达式转换
-  - 支持多种数学表达式格式转换
-  - 提供详细的转换步骤说明
-  - 可视化的转换结果展示
-
-- 💡 智能输入辅助
-  - 实时输入建议
-  - 支持键盘导航选择
-  - 常用数学符号快速输入
+- 智能数学表达式识别和计算
+- 详细的解题步骤和解析
+- 支持多种数学运算（基础运算、代数、微积分等）
+- 公式库功能
+- 历史记录和收藏夹
+- 暗色/亮色主题切换
+- 数学键盘支持
 
 ## 技术栈
 
 - React 18
 - TypeScript
-- Material-UI
+- Material-UI (MUI)
 - Vite
-- KaTeX
 
 ## 开始使用
 
-1. 克隆项目
+1. 克隆仓库
 ```bash
-git clone https://github.com/[your-username]/math-ai-calculator.git
-cd math-ai-calculator
+git clone https://github.com/Ericdu1/Math-AI-Calculator.git
 ```
 
 2. 安装依赖
 ```bash
+cd Math-AI-Calculator
 npm install
 ```
 
@@ -54,30 +45,36 @@ npm run build
 ## 项目结构
 
 ```
-math-ai-calculator/
-├── src/
-│   ├── components/
-│   │   ├── MathInput.tsx      # 智能输入组件
-│   │   ├── MathConverter.tsx  # 表达式转换组件
-│   │   └── HelpDialog.tsx     # 帮助对话框组件
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── public/
-├── index.html
-└── package.json
+src/
+  ├── components/     # 组件目录
+  ├── App.tsx        # 主应用组件
+  ├── main.tsx       # 入口文件
+  └── index.css      # 全局样式
 ```
 
 ## 使用指南
 
-点击界面右上角的帮助图标，可以查看详细的使用说明，包括：
-- 基本功能介绍
-- 使用技巧说明
-- 支持的数学功能列表
+1. 基本操作
+   - 输入数学表达式
+   - 支持基本运算、代数式、方程组等
+
+2. 特殊符号
+   - 使用^表示指数
+   - sqrt()表示平方根
+   - pi表示π
+
+3. 高级功能
+   - 支持微积分
+   - 线性代数
+   - 统计概率等高级数学运算
+
+4. 格式转换
+   - 支持不同数学表示法之间的转换
+   - 支持LaTeX格式
 
 ## 贡献
 
-欢迎提交Issue和Pull Request来帮助改进项目。
+欢迎提交问题和改进建议！
 
 ## 许可证
 
