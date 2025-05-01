@@ -43,8 +43,8 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'alg1',
         title: '二次方程',
-        latex: 'ax^2 + bx + c = 0',
-        description: '标准二次方程形式，求解公式：x = (-b ± √(b² - 4ac)) / (2a)',
+        latex: 'ax² + bx + c = 0',
+        description: '标准二次方程形式，求解公式：x = (-b ± √(b² - 4ac)) / 2a',
         example: '例：x² + 5x + 6 = 0',
         category: '基础代数',
         isFavorite: false
@@ -52,36 +52,36 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'alg2',
         title: '完全平方公式',
-        latex: '(a ± b)² = a² ± 2ab + b²',
-        description: '两个数之和或差的平方展开式',
-        example: '例：(x+3)² = x² + 6x + 9',
+        latex: '(a + b)² = a² + 2ab + b²',
+        description: '两个数之和的平方展开式',
+        example: '例：(x + 3)² = x² + 6x + 9',
         category: '基础代数',
         isFavorite: false
       },
       {
         id: 'alg3',
         title: '立方公式',
-        latex: 'a³ ± b³ = (a ± b)(a² ∓ ab + b²)',
-        description: '两个数之和或差的立方展开式',
-        example: '例：x³ - 8 = (x-2)(x² + 2x + 4)',
+        latex: 'a³ + b³ = (a + b)(a² - ab + b²)',
+        description: '两个数之和的立方展开式',
+        example: '例：x³ + 8 = (x + 2)(x² - 2x + 4)',
         category: '基础代数',
         isFavorite: false
       },
       {
         id: 'alg4',
         title: '平方差公式',
-        latex: 'a² - b² = (a+b)(a-b)',
+        latex: 'a² - b² = (a + b)(a - b)',
         description: '两个数的平方差因式分解',
-        example: '例：x² - 4 = (x+2)(x-2)',
+        example: '例：x² - 4 = (x + 2)(x - 2)',
         category: '基础代数',
         isFavorite: false
       },
       {
         id: 'alg5',
-        title: '立方和公式',
-        latex: 'a³ + b³ = (a + b)(a² - ab + b²)',
-        description: '两个数的立方和因式分解',
-        example: '例：x³ + 8 = (x+2)(x² - 2x + 4)',
+        title: '立方差公式',
+        latex: 'a³ - b³ = (a - b)(a² + ab + b²)',
+        description: '两个数的立方差因式分解',
+        example: '例：x³ - 8 = (x - 2)(x² + 2x + 4)',
         category: '基础代数',
         isFavorite: false
       }
@@ -93,7 +93,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'adv1',
         title: '矩阵乘法',
-        latex: 'C_{ij} = \\sum_{k=1}^n A_{ik}B_{kj}',
+        latex: 'C = A × B',
         description: '矩阵乘法的一般形式',
         example: '例：2×2矩阵相乘',
         category: '高等代数',
@@ -102,7 +102,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'adv2',
         title: '行列式计算',
-        latex: '|A| = \\sum_{j=1}^n a_{1j}A_{1j}',
+        latex: '|A| = a₁₁A₁₁ + a₁₂A₁₂ + ... + a₁ₙA₁ₙ',
         description: '行列式按第一行展开',
         example: '例：|A| = a₁₁A₁₁ + a₁₂A₁₂',
         category: '高等代数',
@@ -111,7 +111,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'adv3',
         title: '特征值方程',
-        latex: '|A - λI| = 0',
+        latex: '|A - λE| = 0',
         description: '求矩阵特征值的特征方程',
         example: '例：A为2×2矩阵时的特征方程',
         category: '高等代数',
@@ -198,36 +198,36 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'diff1',
         title: '基本导数公式',
-        latex: '\\frac{d}{dx}x^n = nx^{n-1}',
+        latex: '(x^n)′ = nx^(n-1)',
         description: '幂函数求导公式',
-        example: '例：d/dx(x³) = 3x²',
+        example: '例：(x³)′ = 3x²',
         category: '微分学',
         isFavorite: false
       },
       {
         id: 'diff2',
         title: '链式法则',
-        latex: '\\frac{d}{dx}f(g(x)) = f\'(g(x))g\'(x)',
+        latex: '[f(g(x))]′ = f′(g(x)) · g′(x)',
         description: '复合函数求导法则',
-        example: '例：d/dx(sin(x²)) = 2x·cos(x²)',
+        example: '例：[sin(x²)]′ = 2x·cos(x²)',
         category: '微分学',
         isFavorite: false
       },
       {
         id: 'diff3',
         title: '乘积法则',
-        latex: '\\frac{d}{dx}[f(x)g(x)] = f\'(x)g(x) + f(x)g\'(x)',
+        latex: '[f(x)·g(x)]′ = f′(x)·g(x) + f(x)·g′(x)',
         description: '两函数乘积的求导法则',
-        example: '例：d/dx(x·sin x) = sin x + x·cos x',
+        example: '例：(x·sin x)′ = sin x + x·cos x',
         category: '微分学',
         isFavorite: false
       },
       {
         id: 'diff4',
         title: '商法则',
-        latex: '\\frac{d}{dx}\\frac{f(x)}{g(x)} = \\frac{f\'(x)g(x) - f(x)g\'(x)}{[g(x)]^2}',
+        latex: '[f(x)/g(x)]′ = [f′(x)·g(x) - f(x)·g′(x)]/[g(x)]²',
         description: '两函数商的求导法则',
-        example: '例：d/dx(x/sin x)',
+        example: '例：(x/sin x)′',
         category: '微分学',
         isFavorite: false
       }
@@ -239,25 +239,25 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'int1',
         title: '基本积分公式',
-        latex: '\\int x^n dx = \\frac{x^{n+1}}{n+1} + C',
+        latex: '∫x^n dx = [x^(n+1)]/(n+1) + C',
         description: '幂函数积分公式',
-        example: '例：∫x²dx = x³/3 + C',
+        example: '例：∫x² dx = x³/3 + C',
         category: '积分学',
         isFavorite: false
       },
       {
         id: 'int2',
         title: '定积分基本定理',
-        latex: '\\int_a^b f(x)dx = F(b) - F(a)',
+        latex: '∫[a→b] f(x)dx = F(b) - F(a)',
         description: '定积分的基本定理',
-        example: '例：∫₀¹x²dx = [x³/3]₀¹ = 1/3',
+        example: '例：∫[0→1] x² dx = [x³/3]₀¹ = 1/3',
         category: '积分学',
         isFavorite: false
       },
       {
         id: 'int3',
         title: '分部积分',
-        latex: '\\int udv = uv - \\int vdu',
+        latex: '∫u dv = u·v - ∫v du',
         description: '分部积分法则',
         example: '例：∫x·sin x dx',
         category: '积分学',
@@ -271,7 +271,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'trig1',
         title: '正弦定理',
-        latex: '\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C} = 2R',
+        latex: 'a/sin A = b/sin B = c/sin C = 2R',
         description: '三角形中边与对应角的正弦比值相等',
         example: '例：在△ABC中，a/sin A = b/sin B',
         category: '三角函数',
@@ -280,7 +280,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'trig2',
         title: '余弦定理',
-        latex: 'c² = a² + b² - 2ab\\cos C',
+        latex: 'c² = a² + b² - 2ab·cos C',
         description: '三角形中任意边的平方等于其他两边平方和减去它们与夹角余弦的积的两倍',
         example: '例：已知两边及夹角可求第三边',
         category: '三角函数',
@@ -289,18 +289,18 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'trig3',
         title: '和角公式',
-        latex: '\\sin(A+B) = \\sin A\\cos B + \\cos A\\sin B',
+        latex: 'sin(A + B) = sin A·cos B + cos A·sin B',
         description: '正弦函数的和角公式',
-        example: '例：sin(60°+30°) = sin60°cos30° + cos60°sin30°',
+        example: '例：sin(60° + 30°) = sin 60°·cos 30° + cos 60°·sin 30°',
         category: '三角函数',
         isFavorite: false
       },
       {
         id: 'trig4',
         title: '倍角公式',
-        latex: '\\sin 2A = 2\\sin A\\cos A',
+        latex: 'sin 2A = 2sin A·cos A',
         description: '正弦函数的二倍角公式',
-        example: '例：sin(2·30°) = 2sin30°cos30°',
+        example: '例：sin(2·30°) = 2·sin 30°·cos 30°',
         category: '三角函数',
         isFavorite: false
       }
@@ -312,7 +312,7 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'prob1',
         title: '排列数',
-        latex: 'P_n^r = \\frac{n!}{(n-r)!}',
+        latex: 'P(n,r) = n!/(n-r)!',
         description: 'n个元素中取r个元素的排列数',
         example: '例：P(5,3) = 5!/(5-3)! = 60',
         category: '概率统计',
@@ -321,16 +321,16 @@ const formulaData: FormulaCategory[] = [
       {
         id: 'prob2',
         title: '组合数',
-        latex: 'C_n^r = \\frac{n!}{r!(n-r)!}',
+        latex: 'C(n,r) = n!/[r!(n-r)!]',
         description: 'n个元素中取r个元素的组合数',
-        example: '例：C(5,3) = 5!/(3!(5-3)!) = 10',
+        example: '例：C(5,3) = 5!/(3!·2!) = 10',
         category: '概率统计',
         isFavorite: false
       },
       {
         id: 'prob3',
         title: '条件概率',
-        latex: 'P(A|B) = \\frac{P(AB)}{P(B)}',
+        latex: 'P(A|B) = P(A∩B)/P(B)',
         description: '在事件B发生的条件下事件A发生的概率',
         example: '例：已知有病且检测阳性的概率除以检测阳性的概率',
         category: '概率统计',
