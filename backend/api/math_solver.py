@@ -2,58 +2,44 @@ import os
 import sys
 import re
 import time
+import requests
+from typing import Dict, Any
 
 class MathSolver:
-    """Qwen2.5-Math AI Calculator (No SymPy/NumPy)"""
+    """Math AI Calculator using API calls"""
     def __init__(self):
-        print("Initializing Qwen2.5-Math AI Calculator")
         self.result_cache = {}
-        self._initialized = False
-        self._init_model()
+        self.api_endpoint = os.getenv('MATH_API_ENDPOINT', 'https://api.math-ai-calculator.com/v1')
+        self.api_key = os.getenv('MATH_API_KEY', '')
+        self._initialized = True  # API 模式下默认就绪
 
-    def _init_model(self):
-        try:
-            from transformers import AutoModelForCausalLM, AutoTokenizer
-            model_name = "Qwen/Qwen2.5-Math-7B"
-            print(f"Loading model: {model_name}")
-            self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map={"": "cpu"}, trust_remote_code=True)
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-            print("Model loaded successfully")
-            self._initialized = True
-        except Exception as e:
-            print(f"Model loading failed: {str(e)}")
-            self.model = None
-            self.tokenizer = None
-            self._initialized = False
-
-    def is_ready(self):
+    def is_ready(self) -> bool:
         return self._initialized
 
-    def solve(self, query):
-        """主入口：仅用Qwen2.5-Math大模型推理"""
-        if not self._initialized:
-            raise Exception("AI模型尚未准备就绪，请稍后再试")
-        
+    def solve(self, query: str) -> Dict[str, Any]:
+        """通过 API 调用解决数学问题"""
         query = self._normalize_query(query)
-        if not self.model or not self.tokenizer:
-            return self._create_error_response(query, "AI模型未加载")
+        
+        # 检查缓存
         if query in self.result_cache:
             return self.result_cache[query]
+
         try:
-            prompt = self._build_prompt(query)
-            response = self._call_qwen(prompt)
+            # 构建 API 请求
+            response = self._call_api(query)
             result = self._parse_response(response)
-            # 简单格式校验
-            if not result['latex'] or not result['steps']:
-                result['success'] = False
-                result['explanation'] = "AI未能正确解析，请尝试换种表达方式。"
-            self.result_cache[query] = result
+            
+            # 缓存结果
+            if result['success']:
+                self.result_cache[query] = result
+            
             return result
         except Exception as e:
-            print(f"AI推理异常: {str(e)}")
-            raise Exception(f"计算错误: {str(e)}")
+            print(f"API 调用错误: {str(e)}", file=sys.stderr)
+            return self._create_error_response(query, str(e))
 
-    def _normalize_query(self, query):
+    def _normalize_query(self, query: str) -> str:
+        """规范化查询字符串"""
         query = ' '.join(query.split())
         replacements = {
             '^': '**',
@@ -69,89 +55,51 @@ class MathSolver:
             query = query.replace(old, new)
         return query
 
-    def _build_prompt(self, query):
-        return f"""你是一个专业的数学AI助手，请详细解答下列数学问题：\n\n问题：{query}\n\n要求：\n1. 给出详细的解题步骤，每一步都用LaTeX公式表示。\n2. 最终答案用LaTeX公式高亮显示。\n3. 结尾给出简明的AI解析说明。\n4. 只输出数学相关内容，不要输出与数学无关的内容。\n\n解答："""
-
-    def _call_qwen(self, prompt):
-        messages = [
-            {"role": "system", "content": "你是一个专业的数学AI助手，擅长通过逐步的方式解答数学问题。"},
-            {"role": "user", "content": prompt}
-        ]
-        input_text = self.tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True
-        )
-        inputs = self.tokenizer(input_text, return_tensors="pt").to(self.model.device)
-        outputs = self.model.generate(
-            inputs.input_ids,
-            max_new_tokens=1024,
-            temperature=0.1,
-            top_p=0.95,
-            repetition_penalty=1.1
-        )
-        response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in response:
-            response = response.split("assistant")[-1].strip()
-            if response.startswith(":"):
-                response = response[1:].strip()
-        return response
-
-    def _parse_response(self, response):
-        result = {
-            'success': True,
-            'latex': '',
-            'steps': [],
-            'explanation': ''
-        }
-        try:
-            # 提取所有LaTeX公式
-            latex_matches = re.finditer(r'\$(.*?)\$|\\\[(.*?)\\\]|\\\((.*?)\\\)', response, re.DOTALL)
-            latex_parts = []
-            for match in latex_matches:
-                latex = match.group(1) or match.group(2) or match.group(3)
-                if latex and latex.strip():
-                    latex_parts.append(latex.strip())
-            if latex_parts:
-                result['latex'] = latex_parts[-1]
-                step_number = 1
-                for latex in latex_parts[:-1]:
-                    step = {
-                        'number': str(step_number),
-                        'title': f'步骤 {step_number}',
-                        'latex': latex,
-                        'explanation': ''
-                    }
-                    result['steps'].append(step)
-                    step_number += 1
-                result['steps'].append({
-                    'number': str(step_number),
-                    'title': '最终结果',
-                    'latex': result['latex'],
-                    'explanation': '计算完成'
-                })
-            # 提取AI解析说明
-            explanations = re.split(r'\n\s*\n', response)
-            if explanations:
-                result['explanation'] = explanations[-1].strip()
-            return result
-        except Exception as e:
-            print(f"解析AI输出失败: {str(e)}")
-            result['success'] = False
-            result['explanation'] = "AI输出解析失败"
-            return result
-
-    def _create_error_response(self, query, msg):
+    def _call_api(self, query: str) -> Dict[str, Any]:
+        """调用数学计算 API"""
+        # 这里使用模拟响应，实际部署时替换为真实的 API 调用
+        # TODO: 实现实际的 API 调用
+        time.sleep(1)  # 模拟网络延迟
+        
+        # 模拟响应
         return {
-            'success': False,
-            'latex': query,
-            'explanation': f'AI计算失败：{msg}',
+            'success': True,
+            'latex': f'\\[{query}\\]',
             'steps': [
                 {
                     'number': '1',
-                    'title': '输入验证',
+                    'title': '解析输入',
+                    'latex': f'\\[{query}\\]',
+                    'explanation': '正在处理输入表达式'
+                }
+            ],
+            'explanation': '这是一个示例响应，实际部署时将连接到真实的 API 服务。'
+        }
+
+    def _parse_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """解析 API 响应"""
+        if not response.get('success'):
+            return self._create_error_response('', response.get('error', '未知错误'))
+        
+        return {
+            'success': True,
+            'latex': response.get('latex', ''),
+            'steps': response.get('steps', []),
+            'explanation': response.get('explanation', '')
+        }
+
+    def _create_error_response(self, query: str, error_msg: str) -> Dict[str, Any]:
+        """创建错误响应"""
+        return {
+            'success': False,
+            'latex': query,
+            'explanation': f'计算失败：{error_msg}',
+            'steps': [
+                {
+                    'number': '1',
+                    'title': '错误信息',
                     'latex': query,
-                    'explanation': 'AI模型未能给出有效答案'
+                    'explanation': error_msg
                 }
             ]
         } 
